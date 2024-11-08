@@ -19,4 +19,4 @@ st.write(guess) #we now have an input element where the user is expected to ente
 
 if guess == st.session_state.goal:
     st.balloons()
-    st.session_state.goal = ragit ndom.randint(1, 100)
+    st.session_state.goal = ragit random.randint(1, 100)
