@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-st.title("Hello world this is my headline")
+st.title("Guess the Pokemons")
 
 st.write("This is my first web app.")
 
