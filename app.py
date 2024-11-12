@@ -2,28 +2,32 @@ import streamlit as st
 import random
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
-MY_ENV_VAR = os.getenv('OPENAI_KEY')
+openai_api_key = os.getenv('OPENAI_KEY')
 
+with st.sidebar:
+    st.write("sidebar")
 
-st.title("Guess the Pokemons")
+st.title("💬 Chatbot")
 
-st.write("This is my first web app.")
+if "messages" not in st.session_state:
+    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
 
-if 'goal' not in st.session_state:
-    st.session_state.goal = random.randint(1,100) #we want to guess a random number between 1 and 100
-st.write("The right number is",st.session_state.goal) #everytime you enter something there will be a new number because it runs every time the client requests a new page
-#the communication between server and client is stateless, we need a mechanism to store something in a so called session to solve this problem of the program always creating a new program every input
-#sessions are recognised in coockies
-#you can create this by session_state
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
+if prompt := st.chat_input():
+    if not openai_api_key:
+        st.info("Please add your OpenAI API key to continue.")
+        st.stop()
 
-
-guess = st.number_input(label="Guess a number", min_value=1, max_value=100) #every time the information is displayes the entire program is run again
-st.write(guess) #we now have an input element where the user is expected to enter the number the user wants to guess
-
-if guess == st.session_state.goal:
-    st.balloons()
-    st.session_state.goal = random.randint(1, 100)
+    client = OpenAI(api_key=openai_api_key)
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+    msg = response.choices[0].message.content
+    st.session_state.messages.append({"role": "assistant", "content": msg})
+    st.chat_message("assistant").write(msg)
