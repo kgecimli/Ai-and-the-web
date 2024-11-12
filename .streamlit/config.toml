@@ -1,0 +1,9 @@
+# .streamlit/config.toml
+
+[theme]
+base="dark"                         # Wähle "light" oder "dark"
+primaryColor="#77DD77"              # Primäre Farbe für Buttons und Highlights
+backgroundColor="#77DD77"           # Hintergrundfarbe der App
+secondaryBackgroundColor="#333333"  # Hintergrundfarbe der Seitenleiste
+textColor="#FFFFFF"                 # Haupttextfarbe
+font="monospace"                    # Schriftart
