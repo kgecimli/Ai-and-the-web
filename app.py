@@ -1,5 +1,12 @@
 import streamlit as st
 import random
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+MY_ENV_VAR = os.getenv('OPENAI_KEY')
+
 
 st.title("Guess the Pokemons")
 
