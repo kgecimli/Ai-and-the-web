@@ -1,6 +1,24 @@
+from venv import create
+
 import streamlit as st
 from openai import OpenAI
 
+
+def create_response(client:OpenAI, prompt: str, random:bool = False, append:bool = True):
+    """
+    A function to create a response of a chatbot based on a prompt
+    :param client:
+    :return:
+    """
+    prompt = {"role": "user",
+                   "content": prompt}
+    if not random:
+        response = client.chat.completions.create(model="gpt-3.5-turbo", messages=[prompt]).choices[
+            0].message.content
+    #TODO: add random selection of response
+    if append:
+        append_and_write("assistant", response)
+    return response
 
 def append_and_write(role: str, message: str):
     """
@@ -18,10 +36,8 @@ def define_goal(client: OpenAI):
     defines a goal for the streamlit session by prompting ChatGPT
     :param client: OpenAI client to use for prompts
     """
-    goal_prompt = {"role": "user",
-                   "content": "Give one random noun for my guessing game. Your answer should only consist of that one word."}
-    st.session_state.goal = client.chat.completions.create(model="gpt-3.5-turbo", messages=[goal_prompt]).choices[
-        0].message.content
+    #TODO: Idea: save goals we had before and tell ChatGPT to use a different one
+    st.session_state.goal = create_response(client = client, prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word.")
     append_and_write("assistant", "Next guess word is: " + st.session_state.goal)
 
 
@@ -39,10 +55,7 @@ def guess(client: OpenAI, message: str):
     append_and_write("assistant", return_message)
     if st.session_state.goal.lower() in message.lower():
         st.balloons()
-        # FIXME das hier vllt eher wenn man den restart button drückt? und hier stattdessen "Wenn du nochmal spielen
-        # FIXME möchtest, drücke einfach den restart button"
-        define_goal(client)
-        append_and_write("assistant", "I've got a new word for you. You can just continue playing as before.")
+        append_and_write("assistant", "To play again, press Restart.")
 
 
 def start(client: OpenAI, clear: bool = True, intro_msg: str = ""):
@@ -52,6 +65,7 @@ def start(client: OpenAI, clear: bool = True, intro_msg: str = ""):
     :param clear: whether to delete previous messages
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
+    #TODO @abrecht this code does not delete the messages belonging to the previous guess word from the chat
     if clear:
         st.session_state.messages = []
     define_goal(client)
@@ -96,3 +110,10 @@ def init_session_variables():
         st.session_state.goal = None
     if "loaded" not in st.session_state or not st.session_state.loaded:
         st.session_state.loaded = True
+
+def hint(client: OpenAI):
+    messages_as_str = ""
+    for message in st.session_state.messages:
+        messages_as_str += message["content"] + "\n"
+    create_response(client=client,
+                    prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " + st.session_state.goal + "and referring to the chat so far" + messages_as_str)
