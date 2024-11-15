@@ -77,5 +77,22 @@ def handle_user_input(client: OpenAI):
 
 
 def populate_sidebar():
+    """
+    fills the sidebar
+    """
     with st.sidebar:
         st.write("sidebar")
+
+
+def init_session_variables():
+    """
+    populates session state variables so we don't have to check every time
+    TODO Idee: dict mit default values
+    variables: messages (list), goal (string), loaded (bool)
+    """
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    if "goal" not in st.session_state:
+        st.session_state.goal = None
+    if "loaded" not in st.session_state or not st.session_state.loaded:
+        st.session_state.loaded = True
