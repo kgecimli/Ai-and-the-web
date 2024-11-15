@@ -4,15 +4,14 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from utils.chat import define_goal, handle_user_input
+from utils.chat import define_goal, handle_user_input, populate_sidebar
 from utils.chat import guess
 
 load_dotenv()
 
 openai_api_key = os.getenv('OPENAI_KEY')
 
-with st.sidebar:
-    st.write("sidebar")
+populate_sidebar()
 
 st.title("💬 Chatbot")
 
