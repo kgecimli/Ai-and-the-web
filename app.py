@@ -17,17 +17,17 @@ with st.sidebar:
 st.title("💬 Chatbot")
 
 client = OpenAI(api_key=openai_api_key)
-if "goal" not in st.session_state:
-    define_goal(client)
+
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
 
+
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-
-
+if "goal" not in st.session_state:
+    define_goal(client)
 
 #if prompt := st.chat_input():
  #   if not openai_api_key:
