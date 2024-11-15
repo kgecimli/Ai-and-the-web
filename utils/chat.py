@@ -2,20 +2,24 @@ from venv import create
 
 import streamlit as st
 from openai import OpenAI
+import random
 
-
-def create_response(client:OpenAI, prompt: str, random:bool = False, append:bool = True):
+def create_response(client:OpenAI, prompt: str, rand_sel:bool = False, append:bool = True) -> str:
     """
-    A function to create a response of a chatbot based on a prompt
-    :param client:
-    :return:
+    :param client: the client used to generate the response
+    :param prompt: prompt for the chatbot
+    :param rand_sel: whether a random response should be selected or not
+    :param append: whether the generated response should be appended or not
+    :return: the response as a string
     """
     prompt = {"role": "user",
                    "content": prompt}
-    if not random:
-        response = client.chat.completions.create(model="gpt-3.5-turbo", messages=[prompt]).choices[
-            0].message.content
+    response_selection = 0
+    #if rand_sel:
+    #   response_selection = random.randint(0, 2)
     #TODO: add random selection of response
+    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=[prompt]).choices[
+        response_selection].message.content
     if append:
         append_and_write("assistant", response)
     return response
@@ -37,7 +41,7 @@ def define_goal(client: OpenAI):
     :param client: OpenAI client to use for prompts
     """
     #TODO: Idea: save goals we had before and tell ChatGPT to use a different one
-    st.session_state.goal = create_response(client = client, prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word.")
+    st.session_state.goal = create_response(client = client, prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word.", append=False, rand_sel = True)
     append_and_write("assistant", "Next guess word is: " + st.session_state.goal)
 
 
@@ -116,4 +120,4 @@ def hint(client: OpenAI):
     for message in st.session_state.messages:
         messages_as_str += message["content"] + "\n"
     create_response(client=client,
-                    prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " + st.session_state.goal + "and referring to the chat so far" + messages_as_str)
+                    prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " + st.session_state.goal + "and refer to the questions and guesses the user has done so far" + messages_as_str)
