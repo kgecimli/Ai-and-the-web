@@ -4,25 +4,26 @@ import streamlit as st
 from openai import OpenAI
 import random
 
-def create_response(client:OpenAI, prompt: str, rand_sel:bool = False, append:bool = True) -> str:
+
+def create_response(client: OpenAI, prompt: str, rand_sel: bool = False, append: bool = True) -> str:
     """
     :param client: the client used to generate the response
     :param prompt: prompt for the chatbot
     :param rand_sel: whether a random response should be selected or not
-    :param append: whether the generated response should be appended or not
+    :param append: whether the generated response should be appended and written or not
     :return: the response as a string
     """
     prompt = {"role": "user",
-                   "content": prompt}
+              "content": prompt}
     response_selection = 0
-    #if rand_sel:
-    #   response_selection = random.randint(0, 2)
-    #TODO: add random selection of response
-    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=[prompt]).choices[
-        response_selection].message.content
+    responses = client.chat.completions.create(model="gpt-3.5-turbo", messages=[prompt]).choices
+    if rand_sel:
+        response_selection = random.randint(0, len(responses) - 1)
+    response = responses[response_selection].message.content
     if append:
         append_and_write("assistant", response)
     return response
+
 
 def append_and_write(role: str, message: str):
     """
@@ -40,8 +41,15 @@ def define_goal(client: OpenAI):
     defines a goal for the streamlit session by prompting ChatGPT
     :param client: OpenAI client to use for prompts
     """
-    #TODO: Idea: save goals we had before and tell ChatGPT to use a different one
-    st.session_state.goal = create_response(client = client, prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word.", append=False, rand_sel = True)
+    # TODO: Idea: save goals we had before and tell ChatGPT to use a different one
+    prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word."
+    already_used = [goal for goal in st.session_state.goals]
+    if already_used:
+        prompt += "Do not use any of the following words: " + ", ".join(already_used)
+    st.session_state.goal = create_response(client=client,
+                                            prompt=prompt,
+                                            append=False, rand_sel=True)
+    st.session_state.goals.append(st.session_state.goal)
     append_and_write("assistant", "Next guess word is: " + st.session_state.goal)
 
 
@@ -69,7 +77,7 @@ def start(client: OpenAI, clear: bool = True, intro_msg: str = ""):
     :param clear: whether to delete previous messages
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    #TODO @abrecht this code does not delete the messages belonging to the previous guess word from the chat
+    # TODO @abrecht this code does not delete the messages belonging to the previous guess word from the chat
     if clear:
         st.session_state.messages = []
     define_goal(client)
@@ -94,14 +102,6 @@ def handle_user_input(client: OpenAI):
             st.chat_message("assistant").write(msg)
 
 
-def populate_sidebar():
-    """
-    fills the sidebar
-    """
-    with st.sidebar:
-        st.write("sidebar")
-
-
 def init_session_variables():
     """
     populates session state variables so we don't have to check every time
@@ -114,6 +114,11 @@ def init_session_variables():
         st.session_state.goal = None
     if "loaded" not in st.session_state or not st.session_state.loaded:
         st.session_state.loaded = True
+    if "goals" not in st.session_state:
+        st.session_state.goals = []
+    if "client" not in st.session_state:
+        st.session_state.client = None
+
 
 def hint(client: OpenAI):
     messages_as_str = ""
@@ -121,3 +126,8 @@ def hint(client: OpenAI):
         messages_as_str += message["content"] + "\n"
     create_response(client=client,
                     prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " + st.session_state.goal + "and refer to the questions and guesses the user has done so far" + messages_as_str)
+
+
+def write_messages():
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).write(msg["content"])
