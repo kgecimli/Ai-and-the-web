@@ -6,7 +6,6 @@ from openai import OpenAI
 from utils.chat import handle_user_input, init_session_variables, start, hint, create_response, write_messages
 from utils.ui import restart_button, give_up_button, hint_button, sidebar
 
-
 if "loaded" not in st.session_state or not st.session_state.loaded:
     load_dotenv()
     openai_api_key = os.getenv('OPENAI_KEY')

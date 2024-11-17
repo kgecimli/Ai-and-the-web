@@ -16,7 +16,8 @@ def create_response(client: OpenAI, prompt: str, rand_sel: bool = False, append:
     prompt = {"role": "user",
               "content": prompt}
     response_selection = 0
-    responses = client.chat.completions.create(model="gpt-3.5-turbo", messages=[prompt]).choices
+    responses = client.chat.completions.create(model="gpt-3.5-turbo",
+                                               messages=(st.session_state.messages + [prompt])).choices
     if rand_sel:
         response_selection = random.randint(0, len(responses) - 1)
     response = responses[response_selection].message.content
@@ -70,16 +71,13 @@ def guess(client: OpenAI, message: str):
         append_and_write("assistant", "To play again, press Restart.")
 
 
-def start(client: OpenAI, clear: bool = True, intro_msg: str = ""):
+def start(client: OpenAI, intro_msg: str = ""):
     """
     starts a round of the guessing game
     :param client: OpenAI client to use for prompts
     :param clear: whether to delete previous messages
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    # TODO @abrecht this code does not delete the messages belonging to the previous guess word from the chat
-    if clear:
-        st.session_state.messages = []
     define_goal(client)
     if intro_msg:
         append_and_write("assistant", intro_msg)
@@ -96,7 +94,14 @@ def handle_user_input(client: OpenAI):
         if prompt.lower().startswith("guess:"):
             guess(client, message=prompt)
         elif prompt:
-            response = client.chat.completions.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+            # make sure chatgpt knows what to do
+            append_text = (f". As a reminder, the goal word is {st.session_state.goal} and you should only ever "
+                           f"respond with 'Yes' or 'No'.")
+            # copy messages by value so we can modify the last user message for chatgpt without displaying the change
+            prompt_msgs = st.session_state.messages[:]
+            prompt_msgs[-1]["content"] += append_text
+            print(prompt_msgs)
+            response = client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
             st.session_state.messages.append({"role": "assistant", "content": msg})
             st.chat_message("assistant").write(msg)
