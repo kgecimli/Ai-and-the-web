@@ -124,6 +124,7 @@ def init_session_variables():
         st.session_state.client = None
 
 
+
 def hint(client: OpenAI):
     messages_as_str = ""
     for message in st.session_state.messages:
@@ -135,3 +136,13 @@ def hint(client: OpenAI):
 def write_messages():
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
+
+def yes_no_function(client: OpenAI, message: str):
+    """
+    function ensures that the guess will be answered with yes or no
+    :param client:
+    :param message:
+    :return:
+    """
+
+
