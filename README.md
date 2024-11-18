@@ -5,19 +5,21 @@ UNSER PART
 ## ToDo
 ### Funktionen
 - [x] ChatGPT goal erstellen lassen
-- [ ] fkt die ja oder nein auf jede Frage zurückgibt (wenn Prompt keine Frage und kein Guess -> Fehler)
-- [ ] fkt um einen guess zu machen (z.B. "Guess: Elephant")
-- [ ] Button für Hints
+- [kgec (in Progress) ] fkt die ja oder nein auf jede Frage zurückgibt (wenn Prompt keine Frage und kein Guess -> Fehler)
+- [X ] fkt um einen guess zu machen (z.B. "Guess: Elephant")
+- [nschade ] Button für Hints
 - [ ] Overview für bereits gestellte Fragen
-- [ ] new game button
-- [ ] Aufgeben Button
-- [ ] kurze erklärung zum spiel
-- [ ] stats page erstellen https://docs.streamlit.io/develop/concepts/multipage-apps/page-and-navigation
+- [X] new game button
+- [ X] Aufgeben Button
+- [ X] kurze erklärung zum spiel
+- [ kgec] stats page erstellen https://docs.streamlit.io/develop/concepts/multipage-apps/page-and-navigation
+- [x] st session variables initialisieren function
+- [x] restart function
 
-## Ideen
-- [ ] maximale guesses
-- [ ] anzahl gebrauchte guesses ausgeben
-- [ ] Chat für guesses
+###Ideen
+- [] maximale guesses
+- [] anzahl gebrauchte guesses ausgeben
+- [] Chat für guesses
 
 
 

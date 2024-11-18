@@ -1,40 +1,33 @@
-from venv import create
-
 import streamlit as st
 from openai import OpenAI
 import random
 
 
-def create_response(client: OpenAI, prompt: str, rand_sel: bool = False, append: bool = True) -> str:
+def create_response(client: OpenAI, prompt: str, hide: bool = False) -> str:
     """
     :param client: the client used to generate the response
-    :param prompt: prompt for the chatbot
-    :param rand_sel: whether a random response should be selected or not
-    :param append: whether the generated response should be appended and written or not
+    :param prompt: prompt for the chatbotﬂ
+    :param hide: whether the generated response should be appended and written or not
     :return: the response as a string
     """
     prompt = {"role": "user",
               "content": prompt}
-    response_selection = 0
     responses = client.chat.completions.create(model="gpt-3.5-turbo",
                                                messages=(st.session_state.messages + [prompt])).choices
-    if rand_sel:
-        response_selection = random.randint(0, len(responses) - 1)
-    response = responses[response_selection].message.content
-    if append:
-        append_and_write("assistant", response)
+    response = responses[0].message.content
+    append_message("assistant", response, hidden=hide)
     return response
 
 
-def append_and_write(role: str, message: str):
+def append_message(role: str, message: str, hidden: bool = False):
     """
     appends the given message and writes it to the chat
     :param role: role of the message
     :param message: message to be appended and written
-    :return:
+    :param hidden: whether the message is hidden or not
     """
-    st.session_state.messages.append({"role": role, "content": message})
-    st.chat_message(role).write(message)
+
+    st.session_state.messages.append({"role": role, "content": message, "hidden": hidden})
 
 
 def define_goal(client: OpenAI):
@@ -49,9 +42,10 @@ def define_goal(client: OpenAI):
         prompt += "Do not use any of the following words: " + ", ".join(already_used)
     st.session_state.goal = create_response(client=client,
                                             prompt=prompt,
-                                            append=False, rand_sel=True)
+                                            hide=False)
     st.session_state.goals.append(st.session_state.goal)
-    append_and_write("assistant", "Next guess word is: " + st.session_state.goal)
+    # debug to see the goal
+    append_message("assistant", "Next guess word is: " + st.session_state.goal)
 
 
 def guess(client: OpenAI, message: str):
@@ -61,14 +55,15 @@ def guess(client: OpenAI, message: str):
     :param message: user message
     """
     return_message = ""
+    # FIXME has to be identical not only included
     if st.session_state.goal.lower() not in message.lower():
         return_message = "Not quite yet. Guess again or continue asking yes/no questions."
     else:
         return_message = "Congratulations, you got the word!"
-    append_and_write("assistant", return_message)
+    append_message("assistant", return_message)
     if st.session_state.goal.lower() in message.lower():
         st.balloons()
-        append_and_write("assistant", "To play again, press Restart.")
+        append_message("assistant", "To play again, press Restart.")
 
 
 def start(client: OpenAI, intro_msg: str = ""):
@@ -80,7 +75,7 @@ def start(client: OpenAI, intro_msg: str = ""):
     """
     define_goal(client)
     if intro_msg:
-        append_and_write("assistant", intro_msg)
+        append_message("assistant", intro_msg)
 
 
 def handle_user_input(client: OpenAI):
@@ -102,7 +97,7 @@ def handle_user_input(client: OpenAI):
             prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
             response = client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
-            st.session_state.messages.append({"role": "assistant", "content": msg})
+            append_message("assistant", msg)
             st.chat_message("assistant").write(msg)
 
 
@@ -124,7 +119,6 @@ def init_session_variables():
         st.session_state.client = None
 
 
-
 def hint(client: OpenAI):
     messages_as_str = ""
     for message in st.session_state.messages:
@@ -135,14 +129,14 @@ def hint(client: OpenAI):
 
 def write_messages():
     for msg in st.session_state.messages:
-        st.chat_message(msg["role"]).write(msg["content"])
+        if not msg["hidden"]:
+            st.chat_message(msg["role"]).write(msg["content"])
+
 
 def yes_no_function(client: OpenAI, message: str):
     """
     function ensures that the guess will be answered with yes or no
-    :param client:
+    :param client:  
     :param message:
     :return:
     """
-
-
