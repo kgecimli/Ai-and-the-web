@@ -1,19 +1,17 @@
 import streamlit as st
 from openai import OpenAI
-import random
 
 
-def create_response(client: OpenAI, prompt: str, hide: bool = False) -> str:
+def create_response(prompt: str, hide: bool = False) -> str:
     """
-    :param client: the client used to generate the response
-    :param prompt: prompt for the chatbotﬂ
+    :param prompt: prompt for the chatbot
     :param hide: whether the generated response should be appended and written or not
     :return: the response as a string
     """
     prompt = {"role": "user",
               "content": prompt}
-    responses = client.chat.completions.create(model="gpt-3.5-turbo",
-                                               messages=(st.session_state.messages + [prompt])).choices
+    responses = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo",
+                                                                messages=(st.session_state.messages + [prompt])).choices
     response = responses[0].message.content
     append_message("assistant", response, hidden=hide)
     return response
@@ -30,28 +28,25 @@ def append_message(role: str, message: str, hidden: bool = False):
     st.session_state.messages.append({"role": role, "content": message, "hidden": hidden})
 
 
-def define_goal(client: OpenAI):
+def define_goal():
     """
     defines a goal for the streamlit session by prompting ChatGPT
-    :param client: OpenAI client to use for prompts
     """
     # TODO: Idea: save goals we had before and tell ChatGPT to use a different one
     prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word."
     already_used = [goal for goal in st.session_state.goals]
     if already_used:
         prompt += "Do not use any of the following words: " + ", ".join(already_used)
-    st.session_state.goal = create_response(client=client,
-                                            prompt=prompt,
+    st.session_state.goal = create_response(prompt=prompt,
                                             hide=False)
     st.session_state.goals.append(st.session_state.goal)
     # debug to see the goal
     append_message("assistant", "Next guess word is: " + st.session_state.goal)
 
 
-def guess(client: OpenAI, message: str):
+def guess(message: str):
     """
     function that evaluates whether the guess for the goal is correct
-    :param client: OpenAI client to use for prompts
     :param message: user message
     """
     return_message = ""
@@ -66,28 +61,24 @@ def guess(client: OpenAI, message: str):
         append_message("assistant", "To play again, press Restart.")
 
 
-def start(client: OpenAI, intro_msg: str = ""):
+def start(intro_msg: str = ""):
     """
     starts a round of the guessing game
-    :param client: OpenAI client to use for prompts
-    :param clear: whether to delete previous messages
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    define_goal(client)
+    define_goal()
     if intro_msg:
         append_message("assistant", intro_msg)
 
 
-def handle_user_input(client: OpenAI):
+def handle_user_input():
     """
     handles user input
-    :param client: OpenAI client to use for prompts
     """
     if prompt := st.chat_input("Type here..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").write(prompt)
+        append_message("user", prompt)
         if prompt.lower().startswith("guess:"):
-            guess(client, message=prompt)
+            guess(message=prompt)
         elif prompt:
             # make sure chatgpt knows what to do
             append_text = (f". As a reminder, the goal word is {st.session_state.goal} and you should only ever "
@@ -95,10 +86,9 @@ def handle_user_input(client: OpenAI):
             # copy messages by value so we can modify the last user message for chatgpt without displaying the change
             prompt_msgs = st.session_state.messages[:]
             prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
-            response = client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
+            response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
             append_message("assistant", msg)
-            st.chat_message("assistant").write(msg)
 
 
 def init_session_variables():
@@ -119,16 +109,24 @@ def init_session_variables():
         st.session_state.client = None
 
 
-def hint(client: OpenAI):
+def hint():
     messages_as_str = ""
     for message in st.session_state.messages:
         messages_as_str += message["content"] + "\n"
-    create_response(client=client,
-                    prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " + st.session_state.goal + "and refer to the questions and guesses the user has done so far" + messages_as_str)
+    create_response(
+        prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " +
+               st.session_state.goal +
+               "and refer to the questions and guesses the user has done so far" +
+               messages_as_str)
 
 
 def write_messages():
+    """
+    write all messages saved in st.session_state.messages to chat
+    """
     for msg in st.session_state.messages:
+        print(msg)
+        # dont display if hidden
         if not msg["hidden"]:
             st.chat_message(msg["role"]).write(msg["content"])
 
