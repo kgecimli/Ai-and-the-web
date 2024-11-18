@@ -99,8 +99,7 @@ def handle_user_input(client: OpenAI):
                            f"respond with 'Yes' or 'No'.")
             # copy messages by value so we can modify the last user message for chatgpt without displaying the change
             prompt_msgs = st.session_state.messages[:]
-            prompt_msgs[-1]["content"] += append_text
-            print(prompt_msgs)
+            prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
             response = client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
             st.session_state.messages.append({"role": "assistant", "content": msg})
