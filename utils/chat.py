@@ -144,3 +144,6 @@ def yes_no_function(client: OpenAI, message: str):
     :param message:
     :return:
     """
+    if message != "Yes" and message != "No":
+        create_response("you are really only allowed to answer with yes or no")
+
