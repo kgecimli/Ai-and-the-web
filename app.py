@@ -19,14 +19,18 @@ if "loaded" not in st.session_state or not st.session_state.loaded:  # st.sessio
 st.title("💬 Chatbot")
 sidebar()
 
-if not st.session_state.goal:
-    start(intro_msg="Welcome to the guessing game. I randomly chose a word you should guess now. You can either "
-                    "ask me Yes/No questions or guess by typing 'Guess: ' followed by your guess.")
+write_messages()
+
+#TODO: buttons in sidebar
 
 restart_button()
 give_up_button()
 hint_button()
 
 # user handling
-write_messages()
+
+#if no goal is defined, we are just starting the first session
+if not st.session_state.goal:
+    start(intro_msg="Welcome to the guessing game. I randomly chose a word you should guess now. You can either "
+                    "ask me Yes/No questions or guess by typing 'Guess: ' followed by your guess.")
 handle_user_input()
