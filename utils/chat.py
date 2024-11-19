@@ -118,11 +118,15 @@ def hint():
     messages_as_str = ""
     for message in st.session_state.messages:
         messages_as_str += message["content"] + "\n"
-    create_response(
+    response = create_response(
         prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " +
                st.session_state.goal +
-               "and refer to the questions and guesses the user has done so far" +
-               messages_as_str)
+               "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses the user has done so far" +
+               messages_as_str, hide = True)
+    if st.session_state.goal in response:
+        hint()
+    else: append_message("assistant", response)
+
 
 
 
