@@ -26,22 +26,27 @@ def append_message(role: str, message: str, hidden: bool = False):
     """
 
     st.session_state.messages.append({"role": role, "content": message, "hidden": hidden})
-
+    if not hidden:
+        st.chat_message(role).write(message)
+        #write_messages()
 
 def define_goal():
     """
     defines a goal for the streamlit session by prompting ChatGPT
     """
-    # TODO: Idea: save goals we had before and tell ChatGPT to use a different one
-    prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word."
+    prompt = "Give one random noun for my guessing game. Your answer should only consist of that one word. I really need a one word answer, any answer with more than one word will destroy my code."
     already_used = [goal for goal in st.session_state.goals]
     if already_used:
         prompt += "Do not use any of the following words: " + ", ".join(already_used)
     st.session_state.goal = create_response(prompt=prompt,
                                             hide=False)
-    st.session_state.goals.append(st.session_state.goal)
-    # debug to see the goal
-    append_message("assistant", "Next guess word is: " + st.session_state.goal)
+    #check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
+    if len(st.session_state.goal.split()) == 1:
+        #remove any spaces from the goal
+        st.session_state.goals.append(st.session_state.goal.replace(" ", ""))
+        # debug to see the goal
+        append_message("assistant", "Next guess word is: " + st.session_state.goal)
+    else: define_goal()
 
 
 def guess(message: str):
@@ -50,13 +55,12 @@ def guess(message: str):
     :param message: user message
     """
     return_message = ""
-    # FIXME has to be identical not only included
-    if st.session_state.goal.lower() not in message.lower():
-        return_message = "Not quite yet. Guess again or continue asking yes/no questions."
-    else:
+    if st.session_state.goal.lower() == message.lower():
         return_message = "Congratulations, you got the word!"
+    else:
+        return_message = "Not quite yet. Guess again or continue asking yes/no questions."
     append_message("assistant", return_message)
-    if st.session_state.goal.lower() in message.lower():
+    if st.session_state.goal.lower() == message.lower():
         st.balloons()
         append_message("assistant", "To play again, press Restart.")
 
@@ -77,8 +81,9 @@ def handle_user_input():
     """
     if prompt := st.chat_input("Type here..."):
         append_message("user", prompt)
-        if prompt.lower().startswith("guess:"):
-            guess(message=prompt)
+        if prompt.lower().startswith("guess: "):
+            #splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
+            guess(message=' '.join(prompt.lower().split()[1:]).replace(" ",""))
         elif prompt:
             # make sure chatgpt knows what to do
             append_text = (f". As a reminder, the goal word is {st.session_state.goal} and you should only ever "
@@ -118,6 +123,7 @@ def hint():
                st.session_state.goal +
                "and refer to the questions and guesses the user has done so far" +
                messages_as_str)
+
 
 
 def write_messages():
