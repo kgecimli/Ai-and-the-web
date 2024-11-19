@@ -62,7 +62,9 @@ def guess(message: str):
     append_message("assistant", return_message)
     if st.session_state.goal.lower() == message.lower():
         st.balloons()
-        append_message("assistant", "To play again, press Restart.")
+        #append_message("assistant", "To play again, press Restart.")
+        st.session_state.messages.clear()
+        start(intro_msg="I've got a new word for you. You can just continue playing as before.")
 
 
 def start(intro_msg: str = ""):
