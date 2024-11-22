@@ -1,6 +1,8 @@
 import streamlit as st
 from openai import OpenAI
 
+from utils.statistics import Statistics
+
 
 def create_response(prompt: str, hide: bool = False) -> str:
     """
@@ -54,6 +56,7 @@ def guess(message: str):
     function that evaluates whether the guess for the goal is correct
     :param message: user message
     """
+    Statistics.num_of_guesses += 1
     return_message = ""
     if st.session_state.goal.lower() == message.lower():
         return_message = "Congratulations, you got the word!"
@@ -62,7 +65,6 @@ def guess(message: str):
     append_message("assistant", return_message)
     if st.session_state.goal.lower() == message.lower():
         st.balloons()
-        #append_message("assistant", "To play again, press Restart.")
         st.session_state.messages.clear()
         start(intro_msg="I've got a new word for you. You can just continue playing as before.")
 
@@ -72,6 +74,7 @@ def start(intro_msg: str = ""):
     starts a round of the guessing game
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
+    Statistics.games_played += 1
     define_goal()
     if intro_msg:
         append_message("assistant", intro_msg)
@@ -83,6 +86,7 @@ def handle_user_input():
     """
     if prompt := st.chat_input("Type here..."):
         append_message("user", prompt)
+        Statistics.questions += 1
         if prompt.lower().startswith("guess: "):
             #splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
             guess(message=' '.join(prompt.lower().split()[1:]).replace(" ",""))

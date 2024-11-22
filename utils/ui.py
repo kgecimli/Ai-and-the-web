@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit import session_state
 
 from utils.chat import start, create_response, hint, append_message
+from utils.statistics import Statistics
 
 
 def restart_button():
@@ -9,7 +10,7 @@ def restart_button():
     creates a button and calls start() if pressed
     """
     if st.sidebar.button("Restart", type="primary"):
-        #TODO: no idea why messages are not deleted rightaway (but maybe that's good)
+        #TODO: no idea why messages are not deleted right away (but maybe that's good)
         session_state.messages.clear()
         start(intro_msg="I've got a new word for you. You can just continue playing as before.")
 
@@ -41,3 +42,4 @@ def sidebar():
     """
     with st.sidebar:
         st.write("sidebar")
+        st.print(Statistics)
