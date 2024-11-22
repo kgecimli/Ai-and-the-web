@@ -60,7 +60,6 @@ def guess(message: str):
     function that evaluates whether the guess for the goal is correct
     :param message: user message
     """
-    st.session_state.statistics.num_of_guesses += 1
     return_message = ""
     if st.session_state.goal.lower() == message.lower():
         return_message = "Congratulations, you got the word!"
@@ -95,6 +94,7 @@ def handle_user_input():
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
             guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
+            st.session_state.statistics.questions += 1
             # make sure chatgpt knows what to do
             append_text = (f". As a reminder, the goal word is {st.session_state.goal} and you should only ever "
                            f"respond with 'Yes' or 'No'.")
