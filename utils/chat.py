@@ -15,7 +15,7 @@ def create_response(prompt: str, hide: bool = False) -> str:
               "content": prompt}
     responses = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo",
                                                                 messages=(st.session_state.messages + [prompt])).choices
-    response = responses[0].message.content
+    response = responses[0].message.content  # we take the first answer from gpt
     append_message("assistant", response, hidden=hide)
     return response
 
@@ -103,7 +103,10 @@ def handle_user_input():
             prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
             response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
-            append_message("assistant", msg)
+            if yes_no_function(msg):
+                append_message("assistant", msg)
+            else:
+                correct_response(prompt, msg)
 
 
 def init_session_variables():
@@ -154,12 +157,17 @@ def write_messages():
             st.chat_message(msg["role"]).write(msg["content"])
 
 
-def yes_no_function(client: OpenAI, message: str):
-    """
-    function ensures that the guess will be answered with yes or no
-    :param client:  
-    :param message:
-    :return:
-    """
-    if message != "Yes" and message != "No":
-        create_response("you are really only allowed to answer with yes or no")
+def yes_no_function(response: str):
+    if response == "Yes" or response == "No" or "idk":
+        return True
+    else:
+        return False
+
+
+def correct_response(prompt: str, response: str):
+    response = create_response(
+        prompt="Only answer with 'Yes' or 'No' if you are not sure how to answer, answer with 'idk' "
+        , hide=True)
+    append_message(role="assistant", message=response)
+    return response
+
