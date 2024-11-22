@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+from streamlit import session_state
 
 from utils.statistics import Statistics
 
@@ -89,8 +90,8 @@ def handle_user_input():
     """
     if prompt := st.chat_input("Type here..."):
         append_message("user", prompt)
-        Statistics.questions += 1
         if prompt.lower().startswith("guess: "):
+            session_state.Statistics.guesses += 1
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
             guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
@@ -121,6 +122,10 @@ def init_session_variables():
         st.session_state.goals = []
     if "client" not in st.session_state:
         st.session_state.client = None
+    if "Statistics" not in st.session_state:
+        stats = Statistics(0,0,0,0)
+        st.session_state.Statistics = stats
+
 
 
 def hint():
