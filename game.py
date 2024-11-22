@@ -3,11 +3,6 @@ import streamlit as st
 from utils.chat import handle_user_input, init_session_variables, start, write_messages
 from utils.ui import restart_button, give_up_button, hint_button, sidebar
 
-with st.expander("Actions"):
-    restart_button()
-    give_up_button()
-    #hint_button()
-
 # ui building
 st.title("💬 Chatbot")
 #sidebar()
