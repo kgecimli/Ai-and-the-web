@@ -9,7 +9,7 @@ def restart_button():
     """
     creates a button and calls start() if pressed
     """
-    if st.sidebar.button("Restart", type="primary"):
+    if st.button("Restart", type="primary"):
         # TODO: no idea why messages are not deleted right away (but maybe that's good)
         session_state.messages.clear()
         start(intro_msg="I've got a new word for you. You can just continue playing as before.")
@@ -19,7 +19,7 @@ def give_up_button():
     """
     creates a button WIP
     """
-    if st.sidebar.button("Give up", type="primary"):
+    if st.button("Give up", type="primary"):
         create_response(prompt="The user gave up on our guessing game. Write a creative message to cheer them up and "
                                "tell them that the word was ." + st.session_state.goal)
         session_state.messages.clear()
@@ -31,8 +31,7 @@ def hint_button():
     """
     creates a button and calls hint() if pressed
     """
-    if st.sidebar.button("Hint", type="primary"):
-        hint()
+    st.button("Hint", type="primary", on_click=hint)
 
 
 def sidebar():
@@ -40,5 +39,7 @@ def sidebar():
     fills the sidebar
     """
     with st.sidebar:
-        st.write("sidebar")
-        st.print(Statistics)
+        st.markdown("## Actions")
+        hint_button()
+        give_up_button()
+        restart_button()

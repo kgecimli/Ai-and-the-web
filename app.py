@@ -4,8 +4,7 @@ import streamlit as st
 from dotenv import load_dotenv  # ist um den wert aus der env datei zu laden
 from openai import OpenAI
 
-from utils.chat import handle_user_input, init_session_variables, start, write_messages
-from utils.ui import restart_button, give_up_button, hint_button, sidebar
+from utils.chat import init_session_variables
 
 # setup
 if "loaded" not in st.session_state or not st.session_state.loaded:  # st.session_state ist ein dictionary
@@ -15,22 +14,9 @@ if "loaded" not in st.session_state or not st.session_state.loaded:  # st.sessio
     init_session_variables()
     st.session_state.client = client
 
-# ui building
-st.title("💬 Chatbot")
-sidebar()
+game_page = st.Page("game.py", title="Guessing game", icon=":material/sports_esports:")
+stats_page = st.Page("stats.py", title="Statistics", icon=":material/bar_chart:")
 
-write_messages()
-
-# TODO: buttons in sidebar
-
-restart_button()
-give_up_button()
-hint_button()
-
-# user handling
-
-# if no goal is defined, we are just starting the first session
-if not st.session_state.goal:
-    start(intro_msg="Welcome to the guessing game. I randomly chose a word you should guess now. You can either "
-                    "ask me Yes/No questions or guess by typing 'Guess: ' followed by your guess.")
-handle_user_input()
+pg = st.navigation([game_page, stats_page])
+st.set_page_config(page_title="Guessing GPT", page_icon=":material/sports_esports:")
+pg.run()

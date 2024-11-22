@@ -19,16 +19,17 @@ def create_response(prompt: str, hide: bool = False) -> str:
     return response
 
 
-def append_message(role: str, message: str, hidden: bool = False):
+def append_message(role: str, message: str, hidden: bool = False, write: bool = True):
     """
     appends the given message and writes it to the chat
+    :param write: whether to instantly write the message
     :param role: role of the message
     :param message: message to be appended and written
     :param hidden: whether the message is hidden or not
     """
 
     st.session_state.messages.append({"role": role, "content": message, "hidden": hidden})
-    if not hidden:
+    if not hidden and write:
         st.chat_message(role).write(message)
         # write_messages()
 
@@ -134,7 +135,7 @@ def hint():
     if st.session_state.goal in response:
         hint()
     else:
-        append_message("assistant", response)
+        append_message("assistant", response, write=False)
 
 
 def write_messages():
