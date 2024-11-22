@@ -30,7 +30,8 @@ def append_message(role: str, message: str, hidden: bool = False):
     st.session_state.messages.append({"role": role, "content": message, "hidden": hidden})
     if not hidden:
         st.chat_message(role).write(message)
-        #write_messages()
+        # write_messages()
+
 
 def define_goal():
     """
@@ -42,13 +43,14 @@ def define_goal():
         prompt += "Do not use any of the following words: " + ", ".join(already_used)
     st.session_state.goal = create_response(prompt=prompt,
                                             hide=False)
-    #check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
+    # check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
     if len(st.session_state.goal.split()) == 1:
-        #remove any spaces from the goal
+        # remove any spaces from the goal
         st.session_state.goals.append(st.session_state.goal.replace(" ", ""))
         # debug to see the goal
         append_message("assistant", "Next guess word is: " + st.session_state.goal)
-    else: define_goal()
+    else:
+        define_goal()
 
 
 def guess(message: str):
@@ -88,8 +90,8 @@ def handle_user_input():
         append_message("user", prompt)
         Statistics.questions += 1
         if prompt.lower().startswith("guess: "):
-            #splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
-            guess(message=' '.join(prompt.lower().split()[1:]).replace(" ",""))
+            # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
+            guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
             # make sure chatgpt knows what to do
             append_text = (f". As a reminder, the goal word is {st.session_state.goal} and you should only ever "
@@ -128,12 +130,11 @@ def hint():
         prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " +
                st.session_state.goal +
                "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses the user has done so far" +
-               messages_as_str, hide = True)
+               messages_as_str, hide=True)
     if st.session_state.goal in response:
         hint()
-    else: append_message("assistant", response)
-
-
+    else:
+        append_message("assistant", response)
 
 
 def write_messages():
@@ -156,4 +157,3 @@ def yes_no_function(client: OpenAI, message: str):
     """
     if message != "Yes" and message != "No":
         create_response("you are really only allowed to answer with yes or no")
-
