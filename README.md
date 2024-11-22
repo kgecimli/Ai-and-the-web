@@ -3,18 +3,10 @@ UNSER PART
 ## Links
 - https://docs.streamlit.io/develop/api-reference/layout
 ## ToDo
-### Funktionen
-- [x] ChatGPT goal erstellen lassen
-- [kgec (in Progress) ] fkt die ja oder nein auf jede Frage zurückgibt (wenn Prompt keine Frage und kein Guess -> Fehler)
-- [X ] fkt um einen guess zu machen (z.B. "Guess: Elephant")
-- [nschade ] Button für Hints
-- [ ] Overview für bereits gestellte Fragen
-- [X] new game button
-- [ X] Aufgeben Button
-- [ X] kurze erklärung zum spiel
-- [ kgec] stats page erstellen https://docs.streamlit.io/develop/concepts/multipage-apps/page-and-navigation
-- [x] st session variables initialisieren function
-- [x] restart function
+- Statistics erstellen per session
+- Staistics darstellen (Bar plot)
+- Simillarity meassure for guess quality
+- repair give up button 
 
 ###Ideen
 - [] maximale guesses
