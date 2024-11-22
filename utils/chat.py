@@ -60,7 +60,7 @@ def guess(message: str):
     function that evaluates whether the guess for the goal is correct
     :param message: user message
     """
-    Statistics.num_of_guesses += 1
+    st.session_state.statistics.num_of_guesses += 1
     return_message = ""
     if st.session_state.goal.lower() == message.lower():
         return_message = "Congratulations, you got the word!"
@@ -78,7 +78,7 @@ def start(intro_msg: str = ""):
     starts a round of the guessing game
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    Statistics.games_played += 1
+    st.session_state.statistics.games_played += 1
     define_goal()
     if intro_msg:
         append_message("assistant", intro_msg)
@@ -91,7 +91,7 @@ def handle_user_input():
     if prompt := st.chat_input("Type here..."):
         append_message("user", prompt)
         if prompt.lower().startswith("guess: "):
-            session_state.Statistics.guesses += 1
+            st.session_state.statistics.guesses += 1
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
             guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
@@ -122,9 +122,9 @@ def init_session_variables():
         st.session_state.goals = []
     if "client" not in st.session_state:
         st.session_state.client = None
-    if "Statistics" not in st.session_state:
+    if "statistics" not in st.session_state:
         stats = Statistics(0,0,0,0)
-        st.session_state.Statistics = stats
+        st.session_state.statistics = stats
 
 
 
