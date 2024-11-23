@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit import session_state
 
-from utils.chat import start, create_response, hint, append_message
+from utils.chat import start, create_response, hint, append_message, give_up
 from utils.statistics import Statistics
 
 
@@ -12,19 +12,14 @@ def restart_button():
     if st.button("Restart", type="primary"):
         # TODO: no idea why messages are not deleted right away (but maybe that's good)
         session_state.messages.clear()
-        start(intro_msg="I've got a new word for you. You can just continue playing as before.")
+        start(intro_msg="I've got a new word for you. You can just continue playing as before.", write=False)
 
 
 def give_up_button():
     """
     creates a button WIP
     """
-    if st.button("Give up", type="primary"):
-        create_response(prompt="The user gave up on our guessing game. Write a creative message to cheer them up and "
-                               "tell them that the word was ." + st.session_state.goal)
-        session_state.messages.clear()
-        start(intro_msg="I've got a new word for you. You can just continue playing as before.")
-        # TODO: end the game such that you can't give up multiple times in a row for the same word (current solution is not perfect)
+    st.button("Give up", type="primary", on_click=give_up)
 
 
 def hint_button():

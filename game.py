@@ -5,17 +5,15 @@ from utils.ui import restart_button, give_up_button, hint_button, sidebar
 
 # ui building
 st.title("💬 Chatbot")
-#sidebar()
 
 write_messages()
 
-# TODO: buttons in sidebar
-
-# user handling
 
 # if no goal is defined, we are just starting the first session
 if not st.session_state.goal:
     start(intro_msg="Welcome to the guessing game. I randomly chose a word you should guess now. You can either "
                     "ask me Yes/No questions or guess by typing 'Guess: ' followed by your guess.")
+
+# user handling
 handle_user_input()
 sidebar()
