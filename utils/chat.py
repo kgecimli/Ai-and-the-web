@@ -1,4 +1,5 @@
 import streamlit as st
+from nltk.corpus import wordnet as wn
 from openai import OpenAI
 from streamlit import session_state
 
@@ -64,8 +65,7 @@ def guess(message: str):
     if st.session_state.goal.lower() == message.lower():
         return_message = "Congratulations, you got the word!"
     else:
-        return_message = "Not quite yet. Guess again or continue asking yes/no questions."
-    append_message("assistant", return_message)
+        similarity(message)
     if st.session_state.goal.lower() == message.lower():
         st.balloons()
         st.session_state.messages.clear()
@@ -165,5 +165,24 @@ def yes_no_function(response: str):
 def correct_response(prompt: str, response: str):
     response = create_response(
         prompt=f"Answer the following question: {prompt}. if it is a yes or no question answer with 'Yes' or 'No', else answer directly with ''I can't answer this. Please ask a yes/no question.' It is really important that you only use one one of these three answer options"
-               , hide = True)
+        , hide=True)
     return response
+
+
+def similarity(message: str):
+    """
+    onfly works in english because wordnet only has english words
+    :param message:  guess from the user
+    :return:
+    """
+    synsets1 = wn.synsets(message)
+    synsets2 = wn.synsets(st.session_state.goal)
+
+    if len(synsets1) > 0 and len(synsets2) > 0:
+        synset1 = synsets1[0]
+        synset2 = synsets2[0]
+        similarity_ = synset1.path_similarity(synset2)
+        similarity_ = similarity_ * 100
+        append_message(role="assistant", message= str(similarity_))
+
+    print(synsets1, synsets2)
