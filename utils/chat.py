@@ -92,10 +92,11 @@ def handle_user_input():
     """
     if prompt := st.chat_input("Type here..."):
         append_message("user", prompt, write=True)
-        if prompt.lower().startswith("guess: "):
+        if prompt.lower().startswith("guess:"):
             st.session_state.statistics[-1].guesses += 1
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
-            guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
+            guess(message=prompt.split("guess:")[1].strip())
+            #guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
             st.session_state.statistics[-1].questions += 1
             # make sure chatgpt knows what to do
