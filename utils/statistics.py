@@ -1,17 +1,11 @@
 
 class Statistics:
-    def __init__(self, questions, guesses, games_played, average_guesses):
+    def __init__(self, questions, guesses, hints):
         self.questions = questions
         self.guesses = guesses
-        '''
-        self.games_played = games_played
-        if self.games_played > 0:
-            self.average_guesses = self.guesses/self.games_played
-        else:
-            self.average_guesses = 0
-        '''
+        self.hints = hints
 
     def __str__(self):
-        return (f"Number of Questions = {self.questions} \n Number of Guesses = {self.guesses} \n ")
-               # f"Number of games played {self.games_played} Average number of guesses = {self.average_guesses} ")
+        return (f"Number of Questions = {self.questions} \nNumber of Guesses = {self.guesses} \nNumber of Hints = {self.hints} \n")
+
 
