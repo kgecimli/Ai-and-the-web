@@ -47,8 +47,9 @@ def define_goal():
                                             hide=False)
     # check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
     if len(st.session_state.goal.split()) == 1:
-        # remove any spaces from the goal
-        st.session_state.goals.append(st.session_state.goal.replace(" ", ""))
+        # Remove all non-letter characters
+        only_letters = ''.join(char for char in st.session_state.goal if char.isalpha())
+        st.session_state.goals.append(only_letters)
         # debug to see the goal
         append_message("assistant", "Next guess word is: " + st.session_state.goal)
     else:
@@ -77,7 +78,7 @@ def start(intro_msg: str = ""):
     starts a round of the guessing game
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    st.session_state.statistics.append(Statistics(0,0,0,0))
+    st.session_state.statistics.append(Statistics(0,0,0))
     define_goal()
     if intro_msg:
         append_message("assistant", intro_msg)
@@ -131,18 +132,18 @@ def init_session_variables():
 
 
 def hint():
+    st.session_state.statistics[-1].hints += 1
     messages_as_str = ""
-    for message in st.session_state.messages:
-        messages_as_str += message["content"] + "\n"
-    response = create_response(
-        prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " +
-               st.session_state.goal +
-               "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses the user has done so far" +
-               messages_as_str, hide=True)
-    if st.session_state.goal in response:
-        hint()
-    else:
-        append_message("assistant", response, write=False)
+    response = ""
+    while st.session_state.goal in response or response == "" or not response.startswith("Hint:"):
+        for message in st.session_state.messages:
+            messages_as_str += message["content"] + "\n"
+        response = create_response(
+            prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " +
+                   st.session_state.goal +
+                   "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses the user has done so far. Your answer should start with 'Hint:', followed by the hint" +
+                   messages_as_str, hide=True)
+    append_message("assistant", response, write=False)
 
 
 def write_messages():
