@@ -103,9 +103,10 @@ def handle_user_input():
             prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
             response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
-            while not yes_no_function(msg):
-                msg = correct_response(prompt, msg)
-            append_message("assistant", msg)
+            if yes_no_function(msg):
+                append_message("assistant", msg)
+            else:
+                correct_response(prompt, msg)
 
 
 def init_session_variables():
@@ -125,8 +126,9 @@ def init_session_variables():
     if "client" not in st.session_state:
         st.session_state.client = None
     if "statistics" not in st.session_state:
-        stats = Statistics(0, 0, 0, 0)
+        stats = Statistics(0,0,0,0)
         st.session_state.statistics = stats
+
 
 
 def hint():
@@ -156,7 +158,7 @@ def write_messages():
 
 
 def yes_no_function(response: str):
-    if response == "Yes" or response == "No" or response == "I can't answer this. Please ask a yes/no question.":
+    if response == "Yes" or response == "No" or "idk":
         return True
     else:
         return False
@@ -164,6 +166,8 @@ def yes_no_function(response: str):
 
 def correct_response(prompt: str, response: str):
     response = create_response(
-        prompt=f"Answer the following question: {prompt}. if it is a yes or no question answer with 'Yes' or 'No', else answer directly with ''I can't answer this. Please ask a yes/no question.' It is really important that you only use one one of these three answer options"
-               , hide = True)
+        prompt="Only answer with 'Yes' or 'No' if you are not sure how to answer, answer with 'idk' "
+        , hide=True)
+    append_message(role="assistant", message=response)
     return response
+
