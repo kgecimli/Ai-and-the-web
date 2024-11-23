@@ -21,7 +21,7 @@ def create_response(prompt: str, hide: bool = False) -> str:
     return response
 
 
-def append_message(role: str, message: str, hidden: bool = False, write: bool = True):
+def append_message(role: str, message: str, hidden: bool = False, write: bool = False):
     """
     appends the given message and writes it to the chat
     :param write: whether to instantly write the message
@@ -45,13 +45,15 @@ def define_goal():
     if already_used:
         prompt += "Do not use any of the following words: " + ", ".join(already_used)
     st.session_state.goal = create_response(prompt=prompt,
-                                            hide=False)
+                                            hide=not st.session_state.debug)
     # check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
     if len(st.session_state.goal.split()) == 1:
-        # remove any spaces from the goal
-        st.session_state.goals.append(st.session_state.goal.replace(" ", ""))
+        # Remove all non-letter characters
+        only_letters = ''.join(char for char in st.session_state.goal if char.isalpha())
+        st.session_state.goals.append(only_letters)
         # debug to see the goal
-        append_message("assistant", "Next guess word is: " + st.session_state.goal)
+        if st.session_state.debug:
+            append_message("assistant", "Next guess word is: " + st.session_state.goal)
     else:
         define_goal()
 
@@ -72,15 +74,16 @@ def guess(message: str):
         start(intro_msg="I've got a new word for you. You can just continue playing as before.")
 
 
-def start(intro_msg: str = ""):
+def start(intro_msg: str = "", write: bool = True):
     """
     starts a round of the guessing game
+    :param write whether to instantly write the message
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    st.session_state.statistics.games_played += 1
+    st.session_state.statistics.append(Statistics(0,0,0))
     define_goal()
     if intro_msg:
-        append_message("assistant", intro_msg)
+        append_message("assistant", intro_msg, write=write)
 
 
 def handle_user_input():
@@ -88,13 +91,13 @@ def handle_user_input():
     handles user input
     """
     if prompt := st.chat_input("Type here..."):
-        append_message("user", prompt)
+        append_message("user", prompt, write=True)
         if prompt.lower().startswith("guess: "):
-            st.session_state.statistics.guesses += 1
+            st.session_state.statistics[-1].guesses += 1
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
             guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
-            st.session_state.statistics.questions += 1
+            st.session_state.statistics[-1].questions += 1
             # make sure chatgpt knows what to do
             append_text = (f". As a reminder, the goal word is {st.session_state.goal} and you should only ever "
                            f"respond with 'Yes' or 'No'.")
@@ -103,9 +106,10 @@ def handle_user_input():
             prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
             response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
-            while not yes_no_function(msg):
-                msg = correct_response(prompt, msg)
-            append_message("assistant", msg)
+            if yes_no_function(msg):
+                append_message("assistant", msg, write=True)
+            else:
+                correct_response(prompt, msg)
 
 
 def init_session_variables():
@@ -125,23 +129,24 @@ def init_session_variables():
     if "client" not in st.session_state:
         st.session_state.client = None
     if "statistics" not in st.session_state:
-        stats = Statistics(0, 0, 0, 0)
-        st.session_state.statistics = stats
+        st.session_state.statistics = []
+    if "debug" not in st.session_state:
+        st.session_state.debug = False
 
 
 def hint():
+    st.session_state.statistics[-1].hints += 1
     messages_as_str = ""
-    for message in st.session_state.messages:
-        messages_as_str += message["content"] + "\n"
-    response = create_response(
-        prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " +
-               st.session_state.goal +
-               "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses the user has done so far" +
-               messages_as_str, hide=True)
-    if st.session_state.goal in response:
-        hint()
-    else:
-        append_message("assistant", response, write=False)
+    response = ""
+    while st.session_state.goal in response or response == "" or not response.startswith("Hint:"):
+        for message in st.session_state.messages:
+            messages_as_str += message["content"] + "\n"
+        response = create_response(
+            prompt="The user needs a hint to guess the word. Provide one based on the guessing word: " +
+                   st.session_state.goal +
+                   "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses the user has done so far. Your answer should start with 'Hint:', followed by the hint" +
+                   messages_as_str, hide=True)
+    append_message("assistant", response, write=False)
 
 
 def write_messages():
@@ -156,7 +161,7 @@ def write_messages():
 
 
 def yes_no_function(response: str):
-    if response == "Yes" or response == "No" or response == "I can't answer this. Please ask a yes/no question.":
+    if response == "Yes" or response == "No" or response =="idk":
         return True
     else:
         return False
@@ -164,8 +169,9 @@ def yes_no_function(response: str):
 
 def correct_response(prompt: str, response: str):
     response = create_response(
-        prompt=f"Answer the following question: {prompt}. if it is a yes or no question answer with 'Yes' or 'No', else answer directly with ''I can't answer this. Please ask a yes/no question.' It is really important that you only use one one of these three answer options"
+        prompt="Only answer with 'Yes' or 'No' if you are not sure how to answer, answer with 'idk' "
         , hide=True)
+    append_message(role="assistant", message=response)
     return response
 
 
@@ -186,3 +192,18 @@ def similarity(message: str):
         append_message(role="assistant", message= str(similarity_))
 
     print(synsets1, synsets2)
+
+def give_up():
+    """
+    called when user gives up. starts a new game
+    """
+    session_state.messages.clear()
+    create_response(prompt="The user gave up on our guessing game. Write a creative message to cheer them up and "
+                           "tell them that the word was ." + st.session_state.goal)
+    start(intro_msg="I've got a new word for you. You can just continue playing as before.", write=False)
+
+
+def restart():
+    # TODO: no idea why messages are not deleted right away (but maybe that's good)
+    session_state.messages.clear()
+    start(intro_msg="I've got a new word for you. You can just continue playing as before.", write=False)
