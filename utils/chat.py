@@ -183,3 +183,9 @@ def give_up():
     session_state.messages.clear()
     start(intro_msg="I've got a new word for you. You can just continue playing as before.", write=False)
     # TODO: end the game such that you can't give up multiple times in a row for the same word (current solution is not perfect)
+
+
+def restart():
+    # TODO: no idea why messages are not deleted right away (but maybe that's good)
+    session_state.messages.clear()
+    start(intro_msg="I've got a new word for you. You can just continue playing as before.", write=False)
