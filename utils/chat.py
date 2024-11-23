@@ -189,7 +189,7 @@ def similarity(message: str):
         synset2 = synsets2[0]
         similarity_ = synset1.path_similarity(synset2)
         similarity_ = similarity_ * 100
-        append_message(role="assistant", message= str(similarity_))
+        append_message(role="assistant", message= str(similarity_), write=True)
 
     print(synsets1, synsets2)
 
