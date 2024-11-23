@@ -20,7 +20,7 @@ def create_response(prompt: str, hide: bool = False) -> str:
     return response
 
 
-def append_message(role: str, message: str, hidden: bool = False, write: bool = True):
+def append_message(role: str, message: str, hidden: bool = False, write: bool = False):
     """
     appends the given message and writes it to the chat
     :param write: whether to instantly write the message
@@ -44,14 +44,15 @@ def define_goal():
     if already_used:
         prompt += "Do not use any of the following words: " + ", ".join(already_used)
     st.session_state.goal = create_response(prompt=prompt,
-                                            hide=False)
+                                            hide=not st.session_state.debug)
     # check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
     if len(st.session_state.goal.split()) == 1:
         # Remove all non-letter characters
         only_letters = ''.join(char for char in st.session_state.goal if char.isalpha())
         st.session_state.goals.append(only_letters)
         # debug to see the goal
-        append_message("assistant", "Next guess word is: " + st.session_state.goal)
+        if st.session_state.debug:
+            append_message("assistant", "Next guess word is: " + st.session_state.goal)
     else:
         define_goal()
 
@@ -66,22 +67,23 @@ def guess(message: str):
         return_message = "Congratulations, you got the word!"
     else:
         return_message = "Not quite yet. Guess again or continue asking yes/no questions."
-    append_message("assistant", return_message)
+    append_message("assistant", return_message, write=True)
     if st.session_state.goal.lower() == message.lower():
         st.balloons()
         st.session_state.messages.clear()
         start(intro_msg="I've got a new word for you. You can just continue playing as before.")
 
 
-def start(intro_msg: str = ""):
+def start(intro_msg: str = "", write: bool = True):
     """
     starts a round of the guessing game
+    :param write whether to instantly write the message
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
     st.session_state.statistics.append(Statistics(0,0,0))
     define_goal()
     if intro_msg:
-        append_message("assistant", intro_msg)
+        append_message("assistant", intro_msg, write=write)
 
 
 def handle_user_input():
@@ -89,7 +91,7 @@ def handle_user_input():
     handles user input
     """
     if prompt := st.chat_input("Type here..."):
-        append_message("user", prompt)
+        append_message("user", prompt, write=True)
         if prompt.lower().startswith("guess: "):
             st.session_state.statistics[-1].guesses += 1
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
@@ -105,7 +107,7 @@ def handle_user_input():
             response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
             if yes_no_function(msg):
-                append_message("assistant", msg)
+                append_message("assistant", msg, write=True)
             else:
                 correct_response(prompt, msg)
 
@@ -128,7 +130,8 @@ def init_session_variables():
         st.session_state.client = None
     if "statistics" not in st.session_state:
         st.session_state.statistics = []
-
+    if "debug" not in st.session_state:
+        st.session_state.debug = False
 
 
 def hint():
@@ -171,3 +174,13 @@ def correct_response(prompt: str, response: str):
     append_message(role="assistant", message=response)
     return response
 
+
+def give_up():
+    """
+    called when user gives up. starts a new game
+    """
+    create_response(prompt="The user gave up on our guessing game. Write a creative message to cheer them up and "
+                           "tell them that the word was ." + st.session_state.goal)
+    session_state.messages.clear()
+    start(intro_msg="I've got a new word for you. You can just continue playing as before.", write=False)
+    # TODO: end the game such that you can't give up multiple times in a row for the same word (current solution is not perfect)
