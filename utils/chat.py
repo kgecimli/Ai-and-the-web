@@ -77,7 +77,7 @@ def start(intro_msg: str = ""):
     starts a round of the guessing game
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    st.session_state.statistics.games_played += 1
+    st.session_state.statistics.append(Statistics(0,0,0,0))
     define_goal()
     if intro_msg:
         append_message("assistant", intro_msg)
@@ -90,11 +90,11 @@ def handle_user_input():
     if prompt := st.chat_input("Type here..."):
         append_message("user", prompt)
         if prompt.lower().startswith("guess: "):
-            st.session_state.statistics.guesses += 1
+            st.session_state.statistics[-1].guesses += 1
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
             guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
-            st.session_state.statistics.questions += 1
+            st.session_state.statistics[-1].questions += 1
             # make sure chatgpt knows what to do
             append_text = (f". As a reminder, the goal word is {st.session_state.goal} and you should only ever "
                            f"respond with 'Yes' or 'No'.")
@@ -126,8 +126,7 @@ def init_session_variables():
     if "client" not in st.session_state:
         st.session_state.client = None
     if "statistics" not in st.session_state:
-        stats = Statistics(0,0,0,0)
-        st.session_state.statistics = stats
+        st.session_state.statistics = []
 
 
 
