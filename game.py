@@ -1,13 +1,13 @@
 import streamlit as st
 
-from utils.chat import handle_user_input, init_session_variables, start, write_messages
-from utils.ui import restart_button, give_up_button, hint_button, sidebar
+from utils.chat import handle_user_input, start, write_messages
+from utils.ui import sidebar
+
+# This page is the actual guessing game
 
 # ui building
 st.title("💬 Chatbot")
-
 write_messages()
-
 
 # if no goal is defined, we are just starting the first session
 if not st.session_state.goal:
@@ -16,4 +16,6 @@ if not st.session_state.goal:
 
 # user handling
 handle_user_input()
+
+# sidebar at the end because of message order
 sidebar()

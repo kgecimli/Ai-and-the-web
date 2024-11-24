@@ -1,9 +1,8 @@
 import streamlit as st
 from nltk.corpus import wordnet as wn
-from openai import OpenAI
 from streamlit import session_state
 
-from utils.statistics import Statistics
+from utils.Statistics import Statistics
 
 
 def create_response(prompt: str, hide: bool = False) -> str:
@@ -107,7 +106,7 @@ def handle_user_input():
             prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
             response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
-            counter = 0 #counter for max amount of iterations
+            counter = 0  # counter for max amount of iterations
             while not yes_no_function(msg) and counter <= 5:
                 msg = correct_response(prompt, msg)
                 counter += 1
@@ -204,7 +203,8 @@ def similarity(message: str):
             append_message(role="assistant", message=str("it seems like you have to clue, ask more questions"),
                            write=True)
     else:
-        append_message(role="assistant", message=str("i am not able to calculate the similarity meassure try somthing else"), write=True)
+        append_message(role="assistant",
+                       message=str("i am not able to calculate the similarity meassure try somthing else"), write=True)
 
 
 def give_up():
