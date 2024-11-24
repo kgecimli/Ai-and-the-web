@@ -8,8 +8,14 @@ from utils.Statistics import Statistics
 from utils.constants import INTRO_MSG, ASSISTANT, USER, GPT_VERSION, BACKUP_GOAL_WORDS, DEBUG
 
 
-def write_message(role, message):
-    st.chat_message(role).write(message)
+def write_message(role, content):
+    """
+    writes a message to the chat
+    :param role: role of the message
+    :param content: content of the message
+    :return:
+    """
+    st.chat_message(role).write(content)
 
 
 def define_goal(depth=0):
@@ -50,7 +56,7 @@ def define_goal(depth=0):
 
 def handle_user_input():
     """
-    handles user input
+    handles user input by checking whether the input is a guess or a question and responding accordingly
     """
     user_msg = st.chat_input("Type here...")
     # if we dont get a user_msg we exit the function
@@ -78,11 +84,11 @@ def handle_user_input():
         # copy messages by value so we can modify the last user message for chatgpt without displaying the change
         prompt_msgs = st.session_state.messages[:]
         prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
-        response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
+        response = st.session_state.client.chat.completions.create(model=GPT_VERSION, messages=prompt_msgs)
         msg = response.choices[0].message.content
         counter = 0  # counter for max amount of iterations
         while not yes_no_function(msg) and counter <= 5:
-            msg = correct_response(user_msg, msg)
+            msg = correct_response()
             counter += 1
 
         append_msg(ASSISTANT, msg)
@@ -106,12 +112,9 @@ def give_hint():
     append_msg(ASSISTANT, response)
 
 
-def correct_response(prompt: str, response: str):
+def correct_response() -> str:
     """
-    TODO
-    :param prompt:
-    :param response:
-    :return:
+    tries to correct ChatGPT's response by telling it to only answer with Yes or No
     """
     response = send_prompt("Only answer with 'Yes' or 'No'. If you are not sure how to answer say 'i am not sure, "
                            "please ask me another question'")
@@ -243,13 +246,13 @@ def give_up():
 
 
 def restart():
-    # TODO: no idea why messages are not deleted right away (but maybe that's good)
+    """
+    restarts the game
+    """
     session_state.messages.clear()
     session_state.prompts.clear()
     start(intro_msg=INTRO_MSG, write=False)
 
-
-#### new
 
 def send_prompt(content: str) -> str:
     """
@@ -264,18 +267,25 @@ def send_prompt(content: str) -> str:
     response = responses[0].message.content
     st.session_state.prompts.append(to_prompt(USER, content))
     st.session_state.prompts.append(to_prompt(ASSISTANT, content))
+    if st.session_state.debug:
+        print(f"Prompt: {content}\nResponse: {response}")
     return response
 
 
-def to_prompt(role: str, message: str) -> dict:
+def to_prompt(role: str, content: str) -> dict:
     """
     takes a role and a messages and returns a dict in the ChatGPT-appropriate format
     :param role: role
-    :param message: content
+    :param content: content
     :return: dict containing role and content
     """
-    return {"role": role, "content": message}
+    return {"role": role, "content": content}
 
 
-def append_msg(role: str, message: str):
-    st.session_state.messages.append(to_prompt(role, message))
+def append_msg(role: str, content: str):
+    """
+    appends a message to the session state
+    :param role: role of the message
+    :param content: content of the message
+    """
+    st.session_state.messages.append(to_prompt(role, content))
