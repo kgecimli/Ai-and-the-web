@@ -8,52 +8,7 @@ from utils.Statistics import Statistics
 from utils.constants import INTRO_MSG, ASSISTANT, USER, GPT_VERSION, BACKUP_GOAL_WORDS, DEBUG
 
 
-def write_message(role, content):
-    """
-    writes a message to the chat
-    :param role: role of the message
-    :param content: content of the message
-    :return:
-    """
-    st.chat_message(role).write(content)
-
-
-def define_goal(depth=0):
-    """
-    defines a goal for the streamlit session by prompting ChatGPT
-    :parameter depth: recursion depth as a failsafe
-    """
-    prompt = ("Give one random noun for my guessing game. Your answer should only consist of that one word. "
-              "I really need a one word answer, any answer with more than one word will destroy my code.")
-    already_used = [goal for goal in st.session_state.goals]
-    if already_used:
-        prompt += "Do not use any of the following words: " + ", ".join(already_used)
-    new_goal = send_prompt(prompt)
-
-    # check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
-    if len(new_goal.split()) == 1:
-        # Remove all non-letter characters
-        only_letters = ''.join(char for char in new_goal if char.isalpha())
-        st.session_state.goals.append(only_letters)
-        st.session_state.goal = only_letters
-
-    elif depth >= 5:
-        # in case ChatGPT goes crazy and doesnt give us a proper goal word
-        new_goal = random.choice(BACKUP_GOAL_WORDS)
-        st.session_state.goals.append(new_goal)
-        st.session_state.goal = new_goal
-        send_prompt("I decided on a goal word by myself. In the following I will ask questions trying to guess "
-                    "the word.")
-    else:
-        # trying again
-        depth += 1
-        define_goal(depth)
-
-    # debug to see the goal
-    if st.session_state.debug:
-        write_message(ASSISTANT, "Next guess word is: " + st.session_state.goal)
-
-
+# functions that are triggered by user actions
 def handle_user_input():
     """
     handles user input by checking whether the input is a guess or a question and responding accordingly
@@ -112,15 +67,85 @@ def give_hint():
     append_msg(ASSISTANT, response)
 
 
-def correct_response() -> str:
+def give_up():
     """
-    tries to correct ChatGPT's response by telling it to only answer with Yes or No
+    called when user gives up. starts a new game
     """
-    response = send_prompt("Only answer with 'Yes' or 'No'. If you are not sure how to answer say 'i am not sure, "
-                           "please ask me another question'")
+    session_state.messages.clear()
+    response = send_prompt("The user gave up on our guessing game. Write a creative message to cheer them up and "
+                           "tell them that the word was ." + st.session_state.goal)
+    append_msg(ASSISTANT, response)
+    start(intro_msg=INTRO_MSG, write=False)
+
+
+def restart():
+    """
+    restarts the game
+    """
+    session_state.messages.clear()
+    session_state.prompts.clear()
+    start(intro_msg=INTRO_MSG, write=False)
+
+
+# basic helper functions
+def write_message(role, content):
+    """
+    writes a message to the chat
+    :param role: role of the message
+    :param content: content of the message
+    :return:
+    """
+    st.chat_message(role).write(content)
+
+
+def write_messages():
+    """
+    write all messages saved in st.session_state.messages to chat
+    """
+    for msg in st.session_state.messages:
+        if st.session_state.debug:
+            print(msg)
+        write_message(msg["role"], msg["content"])
+
+
+def append_msg(role: str, content: str):
+    """
+    appends a message to the session state
+    :param role: role of the message
+    :param content: content of the message
+    """
+    st.session_state.messages.append(to_prompt(role, content))
+
+
+def to_prompt(role: str, content: str) -> dict:
+    """
+    takes a role and a messages and returns a dict in the ChatGPT-appropriate format
+    :param role: role
+    :param content: content
+    :return: dict containing role and content
+    """
+    return {"role": role, "content": content}
+
+
+def send_prompt(content: str) -> str:
+    """
+    Sends a prompt to the OpenAI API and returns the answer
+    :param content: prompt for the chatbot
+    :return: response given by ChatGPT
+    """
+    responses = (st.session_state.client
+                 .chat.completions.create(model=GPT_VERSION,
+                                          messages=(st.session_state.prompts + [to_prompt(USER, content)])).choices)
+    # we take the first answer from gpt
+    response = responses[0].message.content
+    st.session_state.prompts.append(to_prompt(USER, content))
+    st.session_state.prompts.append(to_prompt(ASSISTANT, content))
+    if st.session_state.debug:
+        print(f"Prompt: {content}\nResponse: {response}")
     return response
 
 
+# more complex or specific functions
 def init_session_variables():
     """
     populates session state variables so we don't have to check every time
@@ -153,21 +178,6 @@ def init_session_variables():
         st.session_state.prompts = []
 
 
-def evaluate_guess(guess: str):
-    """
-    function that evaluates whether the guess for the goal is correct
-    :param guess: guess to be evaluated
-    """
-    if st.session_state.goal.lower() == guess.lower():
-        st.balloons()
-        st.session_state.messages.clear()
-        start(intro_msg=INTRO_MSG)
-    else:
-        similarity_msg = calculate_similarity(guess)
-        append_msg(ASSISTANT, similarity_msg)
-        write_message(ASSISTANT, similarity_msg)
-
-
 def start(intro_msg: str = None, write: bool = True):
     """
     starts a round of the guessing game
@@ -182,25 +192,55 @@ def start(intro_msg: str = None, write: bool = True):
             write_message(ASSISTANT, intro_msg)
 
 
-def write_messages():
+def define_goal(depth=0):
     """
-    write all messages saved in st.session_state.messages to chat
+    defines a goal for the streamlit session by prompting ChatGPT
+    :parameter depth: recursion depth as a failsafe
     """
-    for msg in st.session_state.messages:
-        if st.session_state.debug:
-            print(msg)
-        write_message(msg["role"], msg["content"])
+    prompt = ("Give one random noun for my guessing game. Your answer should only consist of that one word. "
+              "I really need a one word answer, any answer with more than one word will destroy my code.")
+    already_used = [goal for goal in st.session_state.goals]
+    if already_used:
+        prompt += "Do not use any of the following words: " + ", ".join(already_used)
+    new_goal = send_prompt(prompt)
+
+    # check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
+    if len(new_goal.split()) == 1:
+        # Remove all non-letter characters
+        only_letters = ''.join(char for char in new_goal if char.isalpha())
+        st.session_state.goals.append(only_letters)
+        st.session_state.goal = only_letters
+
+    elif depth >= 5:
+        # in case ChatGPT goes crazy and doesnt give us a proper goal word
+        new_goal = random.choice(BACKUP_GOAL_WORDS)
+        st.session_state.goals.append(new_goal)
+        st.session_state.goal = new_goal
+        send_prompt("I decided on a goal word by myself. In the following I will ask questions trying to guess "
+                    "the word.")
+    else:
+        # trying again
+        depth += 1
+        define_goal(depth)
+
+    # debug to see the goal
+    if st.session_state.debug:
+        write_message(ASSISTANT, "Next guess word is: " + st.session_state.goal)
 
 
-def yes_no_function(response: str, predefined: str = "i am not sure, please ask me another question") -> bool:
+def evaluate_guess(guess: str):
     """
-    Checks whether the given response is yes, no or a predefined message
-    :param response: response to check
-    :param predefined: alternative accepted message
-    :return: whether the given response is yes, no or a predefined message
+    function that evaluates whether the guess for the goal is correct
+    :param guess: guess to be evaluated
     """
-    response = response.lower()
-    return response == "yes" or response == "no" or response == predefined
+    if st.session_state.goal.lower() == guess.lower():
+        st.balloons()
+        st.session_state.messages.clear()
+        start(intro_msg=INTRO_MSG)
+    else:
+        similarity_msg = calculate_similarity(guess)
+        append_msg(ASSISTANT, similarity_msg)
+        write_message(ASSISTANT, similarity_msg)
 
 
 def calculate_similarity(message: str) -> str:
@@ -234,58 +274,21 @@ def calculate_similarity(message: str) -> str:
         return "it seems like you have to clue, ask more questions"
 
 
-def give_up():
+def yes_no_function(response: str, predefined: str = "i am not sure, please ask me another question") -> bool:
     """
-    called when user gives up. starts a new game
+    Checks whether the given response is yes, no or a predefined message
+    :param response: response to check
+    :param predefined: alternative accepted message
+    :return: whether the given response is yes, no or a predefined message
     """
-    session_state.messages.clear()
-    response = send_prompt("The user gave up on our guessing game. Write a creative message to cheer them up and "
-                           "tell them that the word was ." + st.session_state.goal)
-    append_msg(ASSISTANT, response)
-    start(intro_msg=INTRO_MSG, write=False)
+    response = response.lower()
+    return response == "yes" or response == "no" or response == predefined
 
 
-def restart():
+def correct_response() -> str:
     """
-    restarts the game
+    tries to correct ChatGPT's response by telling it to only answer with Yes or No
     """
-    session_state.messages.clear()
-    session_state.prompts.clear()
-    start(intro_msg=INTRO_MSG, write=False)
-
-
-def send_prompt(content: str) -> str:
-    """
-    Sends a prompt to the OpenAI API and returns the answer
-    :param content: prompt for the chatbot
-    :return: response given by ChatGPT
-    """
-    responses = (st.session_state.client
-                 .chat.completions.create(model=GPT_VERSION,
-                                          messages=(st.session_state.prompts + [to_prompt(USER, content)])).choices)
-    # we take the first answer from gpt
-    response = responses[0].message.content
-    st.session_state.prompts.append(to_prompt(USER, content))
-    st.session_state.prompts.append(to_prompt(ASSISTANT, content))
-    if st.session_state.debug:
-        print(f"Prompt: {content}\nResponse: {response}")
+    response = send_prompt("Only answer with 'Yes' or 'No'. If you are not sure how to answer say 'i am not sure, "
+                           "please ask me another question'")
     return response
-
-
-def to_prompt(role: str, content: str) -> dict:
-    """
-    takes a role and a messages and returns a dict in the ChatGPT-appropriate format
-    :param role: role
-    :param content: content
-    :return: dict containing role and content
-    """
-    return {"role": role, "content": content}
-
-
-def append_msg(role: str, content: str):
-    """
-    appends a message to the session state
-    :param role: role of the message
-    :param content: content of the message
-    """
-    st.session_state.messages.append(to_prompt(role, content))
