@@ -1,6 +1,6 @@
 import streamlit as st
 
-from utils.chat import hint, give_up, restart
+from utils.chat import give_hint, give_up, restart
 
 
 def restart_button():
@@ -21,7 +21,7 @@ def hint_button():
     """
     creates a button and calls hint() if pressed
     """
-    st.button("Hint", type="primary", on_click=hint)
+    st.button("Hint", type="primary", on_click=give_hint)
 
 
 def sidebar():
