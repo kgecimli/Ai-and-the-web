@@ -80,7 +80,7 @@ def start(intro_msg: str = "", write: bool = True):
     :param write whether to instantly write the message
     :param intro_msg: message that's sent at the start of the game (if provided. By default, no message is sent)
     """
-    st.session_state.statistics.append(Statistics(0,0,0))
+    st.session_state.statistics.append(Statistics(0, 0, 0))
     define_goal()
     if intro_msg:
         append_message("assistant", intro_msg, write=write)
@@ -96,7 +96,7 @@ def handle_user_input():
             st.session_state.statistics[-1].guesses += 1
             # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess is passed to the guess function
             guess(message=prompt.split("guess:")[1].strip())
-            #guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
+            # guess(message=' '.join(prompt.lower().split()[1:]).replace(" ", ""))
         elif prompt:
             st.session_state.statistics[-1].questions += 1
             # make sure chatgpt knows what to do
@@ -107,10 +107,12 @@ def handle_user_input():
             prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
             response = st.session_state.client.chat.completions.create(model="gpt-3.5-turbo", messages=prompt_msgs)
             msg = response.choices[0].message.content
-            if yes_no_function(msg):
-                append_message("assistant", msg, write=True)
-            else:
-                correct_response(prompt, msg)
+            counter = 0 #counter for max amount of iterations
+            while not yes_no_function(msg) and counter <= 5:
+                msg = correct_response(prompt, msg)
+                counter += 1
+
+            append_message("assistant", msg, write=True)
 
 
 def init_session_variables():
@@ -162,7 +164,7 @@ def write_messages():
 
 
 def yes_no_function(response: str):
-    if response == "Yes" or response == "No" or response =="idk":
+    if response == "Yes" or response == "No" or response == "i am not sure, please ask me another question":
         return True
     else:
         return False
@@ -170,15 +172,14 @@ def yes_no_function(response: str):
 
 def correct_response(prompt: str, response: str):
     response = create_response(
-        prompt="Only answer with 'Yes' or 'No' if you are not sure how to answer, answer with 'idk' "
-        , hide=True)
-    append_message(role="assistant", message=response)
+        prompt="Only answer with 'Yes' or 'No' " +
+               "If you are not sure how to answer say 'i am not sure, please ask me another question' ", hide=True, )
     return response
 
 
 def similarity(message: str):
     """
-    onfly works in english because wordnet only has english words
+    only works in english because wordnet only has english words
     :param message:  guess from the user
     :return:
     """
@@ -190,9 +191,21 @@ def similarity(message: str):
         synset2 = synsets2[0]
         similarity_ = synset1.path_similarity(synset2)
         similarity_ = similarity_ * 100
-        append_message(role="assistant", message= str(similarity_), write=True)
+        # the best score you can probably reach is about 17 so everything above 12 is a good similarity  score
+        if similarity_ > 12:
+            append_message(role="assistant", message=str("you are very close"), write=True)
+        elif 12 > similarity_ > 10:
+            append_message(role="assistant", message=str("you are close"), write=True)
+        elif 10 >= similarity_ > 8:
+            append_message(role="assistant", message=str("your guess goes in the right direction"), write=True)
+        elif 8 >= similarity_ > 6:
+            append_message(role="assistant", message=str("your guess is bad"), write=True)
+        elif 6 >= similarity_ > 1:
+            append_message(role="assistant", message=str("it seems like you have to clue, ask more questions"),
+                           write=True)
+    else:
+        append_message(role="assistant", message=str("i am not able to calculate the similarity meassure try somthing else"), write=True)
 
-    print(synsets1, synsets2)
 
 def give_up():
     """
