@@ -4,6 +4,7 @@ from openai import OpenAI
 
 from utils.chat import init_session_variables
 
+# download wordnet from nltk for word similarity measuring
 nltk.download("wordnet")
 
 # setup

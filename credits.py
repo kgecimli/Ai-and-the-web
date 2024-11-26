@@ -7,3 +7,19 @@ create this amazing app. The names of these icons of peak programmer performance
 st.title("Credits")
 st.markdown(content)
 st.image("static/programmers.jpeg")
+
+cnt = """
+### Here are our paypal links in case you want to contribute to our work
+Please guys we really need this.
+"""
+
+urls = """
+- [Noah's Paypal](https://www.paypal.me/NoahSchade825)
+- [Adrian's Paypal](https://www.paypal.me/abrechtken)
+- [Koray's Paypal](https://www.paypal.me/KorayGecimli)
+"""
+st.markdown(cnt)
+with st.expander("..."):
+    st.write("Like actually guys we really really do we spend the last few years developing this and its not even good please")
+st.markdown(urls)
+
