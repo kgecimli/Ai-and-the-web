@@ -255,24 +255,31 @@ def calculate_similarity(message: str) -> str:
 
     # if no synsets were found for either word, abort
     if len(msg_synsets) == 0 or len(goal_synsets) == 0:
+        st.session_state.statistics[-1].unknown += 1
         return "I am not able to calculate the similarity measure for this guess."
 
     msg_synset = msg_synsets[0]
     goal_synset = goal_synsets[0]
     similarity = msg_synset.path_similarity(goal_synset)
     if not similarity:
+        st.session_state.statistics[-1].unknown += 1
         return "I am not able to calculate the similarity measure for this guess."
     similarity = similarity * 100
     # the best score you can probably reach is about 17 so everything above 12 is a good similarity score
     if similarity > 12:
+        st.session_state.statistics[-1].verygood += 1
         return "you are very close"
     elif 12 > similarity > 10:
+        st.session_state.statistics[-1].good += 1
         return "you are close"
     elif 10 >= similarity > 8:
+        st.session_state.statistics[-1].moderate += 1
         return "your guess goes in the right direction"
     elif 8 >= similarity > 6:
+        st.session_state.statistics[-1].bad += 1
         return "your guess is bad"
     elif 6 >= similarity:
+        st.session_state.statistics[-1].verybad += 1
         return "it seems like you have no clue, ask more questions"
 
 
