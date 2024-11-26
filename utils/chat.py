@@ -45,7 +45,8 @@ def handle_user_input():
         while not yes_no_function(msg) and counter <= 5:
             msg = correct_response()
             counter += 1
-        # TODO fail message
+        if not yes_no_function(msg):
+            msg = "i am not sure, please ask me another question"
         append_msg(ASSISTANT, msg)
         write_message(ASSISTANT, msg)
 
@@ -63,7 +64,8 @@ def give_hint():
         response = send_prompt(
             f"The user needs a hint to guess the word. Provide one based on the guessing word: {st.session_state.goal}"
             "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses "
-            f"the user has done so far. Your answer should start with 'Hint:', followed by the hint {messages_as_str}")
+            f"the user has done so far. Do not reuse hints that are in the chat. Your answer should start with "
+            f"'Hint:', followed by the hint {messages_as_str}")
     append_msg(ASSISTANT, response)
 
 
