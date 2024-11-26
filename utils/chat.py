@@ -46,7 +46,7 @@ def handle_user_input():
             msg = correct_response()
             counter += 1
         if not yes_no_function(msg):
-            msg = "i am not sure, please ask me another question"
+            msg = "I am not sure, please ask me another question."
         append_msg(ASSISTANT, msg)
         write_message(ASSISTANT, msg)
 
@@ -60,12 +60,15 @@ def give_hint():
     # ensure ChatGPT gives a proper response and does not spoil the goal word
     while st.session_state.goal in response or response == "" or not response.startswith("Hint:"):
         # create a string of all messages for context
-        messages_as_str = "\n".join([message["content"] for message in st.session_state.messages])
+        #messages_as_str = "\n".join([message["content"] for message in st.session_state.messages])
         response = send_prompt(
             f"The user needs a hint to guess the word. Provide one based on the guessing word: {st.session_state.goal}"
             "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses "
-            f"the user has done so far. Do not reuse hints that are in the chat. Your answer should start with "
-            f"'Hint:', followed by the hint {messages_as_str}")
+            f"the user has done so far. Your first hint should be general and then the hints should get more and more"
+            f"specific. In the chat you will find several messages starting with 'Hint:'. It is of "
+            f"uttermost importance that your hint has a different meaning than those hints. Your hint should provide "
+            f"new information to the user they have not received yet through the chat. Your answer should start with "
+            f"'Hint:', followed by the hint")
     append_msg(ASSISTANT, response)
 
 
@@ -270,22 +273,22 @@ def calculate_similarity(message: str) -> str:
     # the best score you can probably reach is about 17 so everything above 12 is a good similarity score
     if similarity > 12:
         st.session_state.statistics[-1].verygood += 1
-        return "you are very close"
+        return "You are very close. Keep going!"
     elif 12 > similarity > 10:
         st.session_state.statistics[-1].good += 1
-        return "you are close"
+        return "You are close."
     elif 10 >= similarity > 8:
         st.session_state.statistics[-1].moderate += 1
-        return "your guess goes in the right direction"
+        return "Your guess goes in the right direction."
     elif 8 >= similarity > 6:
         st.session_state.statistics[-1].bad += 1
-        return "your guess is bad"
+        return "Your guess is bad."
     elif 6 >= similarity:
         st.session_state.statistics[-1].verybad += 1
-        return "it seems like you have no clue, ask more questions"
+        return "It seems like you have no clue, maybe asking more questions might help."
 
 
-def yes_no_function(response: str, predefined: str = "i am not sure, please ask me another question") -> bool:
+def yes_no_function(response: str, predefined: str = "I am not sure, please ask me another question.") -> bool:
     """
     Checks whether the given response is yes, no or a predefined message
     :param response: response to check
@@ -301,5 +304,5 @@ def correct_response() -> str:
     tries to correct ChatGPT's response by telling it to only answer with Yes or No
     """
     response = send_prompt("Only answer with 'Yes' or 'No'. If you are not sure how to answer say 'i am not sure, "
-                           "please ask me another question'")
+                           "please ask me another question.'")
     return response

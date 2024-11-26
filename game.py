@@ -6,6 +6,11 @@ from utils.ui import sidebar
 # This page is the actual guessing game
 
 # ui building
+with st.expander("Rules"):
+    st.write("Welcome to the guessing game. I randomly chose a word you should guess now. You can either "
+                    "ask me Yes/No questions or guess by typing 'Guess: ' followed by your guess. If you need a hint,"
+             "want to give up or restart the game, use the buttons on the sidebar.")
+
 st.title("💬 Chatbot")
 write_messages()
 
