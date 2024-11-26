@@ -45,7 +45,7 @@ def handle_user_input():
         while not yes_no_function(msg) and counter <= 5:
             msg = correct_response()
             counter += 1
-
+        # TODO fail message
         append_msg(ASSISTANT, msg)
         write_message(ASSISTANT, msg)
 
@@ -260,6 +260,8 @@ def calculate_similarity(message: str) -> str:
     msg_synset = msg_synsets[0]
     goal_synset = goal_synsets[0]
     similarity = msg_synset.path_similarity(goal_synset)
+    if not similarity:
+        return "I am not able to calculate the similarity measure for this guess."
     similarity = similarity * 100
     # the best score you can probably reach is about 17 so everything above 12 is a good similarity score
     if similarity > 12:
@@ -271,7 +273,7 @@ def calculate_similarity(message: str) -> str:
     elif 8 >= similarity > 6:
         return "your guess is bad"
     elif 6 >= similarity:
-        return "it seems like you have to clue, ask more questions"
+        return "it seems like you have no clue, ask more questions"
 
 
 def yes_no_function(response: str, predefined: str = "i am not sure, please ask me another question") -> bool:

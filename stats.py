@@ -6,7 +6,7 @@ import streamlit as st
 for i, element in enumerate(st.session_state.statistics, 1):
     # for each game, output number of questions and of guesses
     st.write("Game " + str(i) + ": ")
-    st.write(element)
+    st.write(str(element))
 
 num_guesses = []
 if st.session_state.statistics:
