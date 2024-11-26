@@ -1,5 +1,6 @@
 class Statistics:
-    def __init__(self, questions: int = 0, guesses: int = 0, hints: int = 0, verybad=0, bad=0, moderate=0, good=0, verygood=0, unknown=0):
+    def __init__(self, questions: int = 0, guesses: int = 0, hints: int = 0, verybad=0, bad: int = 0, moderate: int = 0,
+                 good: int = 0, verygood: int = 0, unknown: int = 0):
         """
         Statistics class used to save information about an instance of the guessing game
         :param questions: number of questions
