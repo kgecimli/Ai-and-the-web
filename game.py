@@ -11,7 +11,7 @@ with st.expander("Rules"):
              "as you want. If you think you got the word, you can guess by typing 'Guess:' followed by your guess. "
              "If you need a hint, want to give up or restart the game, use the buttons on the sidebar.")
 
-st.title("💬 Chatbot")
+st.title("Guess What⁉️")
 write_messages()
 
 # if no goal is defined, we are just starting the first session
