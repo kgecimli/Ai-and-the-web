@@ -21,7 +21,8 @@ if "loaded" not in st.session_state or not st.session_state.loaded:  # st.sessio
 # pages
 game_page = st.Page("game.py", title="Guessing game", icon=":material/sports_esports:")
 stats_page = st.Page("stats.py", title="Statistics", icon=":material/bar_chart:")
+credits_page = st.Page("credits.py", title="Credits", icon=":material/groups:")
 
-pg = st.navigation([game_page, stats_page])
+pg = st.navigation([game_page, stats_page, credits_page])
 st.set_page_config(page_title="Guessing GPT", page_icon=":material/sports_esports:", layout="wide")
 pg.run()
