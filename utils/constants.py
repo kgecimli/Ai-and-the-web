@@ -3,4 +3,4 @@ ASSISTANT = "assistant"
 USER = "user"
 GPT_VERSION = "gpt-4o-mini" # gpt-3.5-turbo
 BACKUP_GOAL_WORDS = ["car", "fish", "orange", "christmas", "water", "candle", "guitar", "controller", "wardrobe"]
-DEBUG = True
+DEBUG = False
