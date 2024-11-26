@@ -17,7 +17,7 @@ class Statistics:
         self.unknown = unknown
 
     def __str__(self) -> str:
-        return (f"Number of Questions = {self.questions}  \nNumber of Guesses = {self.guesses}  \nNumber of Hints = "
+        return (f"Number of questions = {self.questions}  \nNumber of guesses = {self.guesses}  \nNumber of hints = "
                 f"{self.hints}  \nNumber of very good guesses: {self.verygood}  \nNumber of good guesses: {self.good}"
                 f"  \nNumber of moderate guesses: {self.moderate}  \nNumber of bad guesses: {self.bad}"
                 f"  \nNumber of very bad guesses: {self.verybad}  \nNumber of unknown guesses: {self.unknown}")
