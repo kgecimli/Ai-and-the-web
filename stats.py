@@ -22,4 +22,4 @@ if len(st.session_state.statistics) > 1:
 for i, element in enumerate(st.session_state.statistics, 1):
     # for each game, output number of questions and of guesses
     st.write("Game " + str(i) + ": ")
-    st.write(str(element))
+    st.markdown(str(element))
