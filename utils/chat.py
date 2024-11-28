@@ -42,11 +42,11 @@ def handle_user_input():
         response = st.session_state.client.chat.completions.create(model=GPT_VERSION, messages=prompt_msgs)
         msg = response.choices[0].message.content
         counter = 0  # counter for max amount of iterations
-        while not yes_no_function(msg) and counter <= 5:
-            msg = correct_response()
-            counter += 1
-        if not yes_no_function(msg):
-            msg = "I am not sure, please ask me another question."
+        #while not yes_no_function(msg) and counter <= 5:
+        #    msg = correct_response()
+        #    counter += 1
+        #if not yes_no_function(msg):
+        #    msg = "I am not sure, please ask me another question."
         append_msg(ASSISTANT, msg)
         write_message(ASSISTANT, msg)
 
@@ -60,7 +60,7 @@ def give_hint():
     # ensure ChatGPT gives a proper response and does not spoil the goal word
     while st.session_state.goal in response or response == "" or not response.startswith("Hint:"):
         # create a string of all messages for context
-        #messages_as_str = "\n".join([message["content"] for message in st.session_state.messages])
+        # messages_as_str = "\n".join([message["content"] for message in st.session_state.messages])
         response = send_prompt(
             f"The user needs a hint to guess the word. Provide one based on the guessing word: {st.session_state.goal}"
             "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses "
@@ -303,6 +303,6 @@ def correct_response() -> str:
     """
     tries to correct ChatGPT's response by telling it to only answer with Yes or No
     """
-    response = send_prompt("Only answer with 'Yes' or 'No'. If you are not sure how to answer say 'i am not sure, "
-                           "please ask me another question.'")
+    response = send_prompt(
+        "If it is true for the Goal answer if 'Yes.' if it is false for the goal answer with 'No.' If you are not sure how to answer say 'i am not sure, please ask me another question.' ")
     return response
