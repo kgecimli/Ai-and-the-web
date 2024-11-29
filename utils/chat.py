@@ -24,7 +24,11 @@ def handle_user_input():
     write_message(USER, user_msg)
     # we saved the original user_msg, so we can modify it for following checks
     user_msg = user_msg.lower()
-    if user_msg.startswith("guess:"):
+    if len(user_msg) > 10000:
+        msg = "Wow, that's pretty big. Please keep your questions and guesses shorter."
+        append_msg(ASSISTANT, msg)
+        write_message(ASSISTANT, msg)
+    elif user_msg.startswith("guess:"):
         st.session_state.statistics[-1].guesses += 1
 
         # splits the prompt and excludes the first word (guess:) and any spaces, such that only the actual guess
@@ -40,9 +44,7 @@ def handle_user_input():
                        f"respond with 'Yes' or 'No'.")
         # copy messages by value so we can modify the last user message for chatgpt without displaying the change
         prompt_msgs = st.session_state.messages[:]
-        prompt_msgs[-1] = {"role": prompt_msgs[-1]["role"], "content": prompt_msgs[-1]["content"] + append_text}
-        response = st.session_state.client.chat.completions.create(model=GPT_VERSION, messages=prompt_msgs)
-        msg = response.choices[0].message.content
+        msg = send_prompt(prompt_msgs[-1]["content"] + append_text)
         counter = 0  # counter for max amount of iterations
         while not yes_no_function(msg) and counter <= 5:
             msg = correct_response()
@@ -61,9 +63,9 @@ def give_hint():
     response = ""
     # ensure ChatGPT gives a proper response and does not spoil the goal word
     while st.session_state.goal in response or response == "" or not response.startswith("Hint:"):
-        if st.session_state.debug:
-            print(GIVE_HINT_PROMPT.format(goal_word=st.session_state.goal))
-        response = send_prompt(GIVE_HINT_PROMPT.format(goal_word=st.session_state.goal))
+        hints_so_far = [p["content"] for p in st.session_state.prompts if "hint:" in p["content"][:6].lower()]
+        hints = ", ".join(hints_so_far) if len(hints_so_far) > 0 else "no hints"
+        response = send_prompt(GIVE_HINT_PROMPT.format(goal_word=st.session_state.goal, hints=hints))
     append_msg(ASSISTANT, response)
 
 
@@ -138,7 +140,7 @@ def send_prompt(content: str) -> str:
     # we take the first answer from gpt
     response = responses[0].message.content
     st.session_state.prompts.append(to_prompt(USER, content))
-    st.session_state.prompts.append(to_prompt(ASSISTANT, content))
+    st.session_state.prompts.append(to_prompt(ASSISTANT, response))
     if st.session_state.debug:
         print(f"Prompt: {content}\nResponse: {response}")
     return response
@@ -254,14 +256,16 @@ def calculate_similarity(message: str) -> str:
     # if no synsets were found for either word, abort
     if len(msg_synsets) == 0 or len(goal_synsets) == 0:
         st.session_state.statistics[-1].unknown += 1
-        return "I am not able to calculate the similarity measure for this guess."
+        return ("Mh, I don't recognize this word. Please make sure your guess is a properly spelled english word "
+                "without any special characters.")
 
     msg_synset = msg_synsets[0]
     goal_synset = goal_synsets[0]
     similarity = msg_synset.path_similarity(goal_synset)
     if not similarity:
         st.session_state.statistics[-1].unknown += 1
-        return "I am not able to calculate the similarity measure for this guess."
+        return ("Mh, I don't recognize this word. Please make sure your guess is a properly spelled english word "
+                "without any special characters.")
     similarity = similarity * 100
     # the best score you can probably reach is about 17 so everything above 12 is a good similarity score
     if similarity > 12:

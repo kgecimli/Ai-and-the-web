@@ -5,6 +5,22 @@ from utils.ui import sidebar
 
 # This page is the actual guessing game
 
+
+# This overrides the button width since we want our buttons to have a uniform width. <style> accesses CSS, button gets
+# styles for <button> HTML Tags, width sets width to 100%, ensuring that buttons use the full width of their parent
+# element, !important is used to override default streamlit styles. We simply do this for every button, since we only
+# have those three we want to override
+st.markdown(
+    """
+<style>
+button {
+    width: 100% !important;
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
 # ui building
 with st.expander("Rules"):
     st.write("In this guessing game, I will provide you with a random noun. You can ask me as many yes/no questions"
