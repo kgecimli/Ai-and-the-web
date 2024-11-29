@@ -23,9 +23,9 @@ button {
 
 # ui building
 with st.expander("Rules"):
-    st.write("In this guessing game, I will provide you with a random noun. You can ask me as many yes/no questions"
+    st.write("In this guessing game, I will provide you with a random noun. You can ask me as many yes/no questions "
              "as you want. If you think you got the word, you can guess by typing 'Guess:' followed by your guess. "
-             "If you need a hint, want to give up or restart the game, use the buttons on the sidebar.")
+             "If you need a hint, want to give up or restart the game, use the buttons in the sidebar.")
 
 st.title("Guess What⁉️")
 write_messages()
