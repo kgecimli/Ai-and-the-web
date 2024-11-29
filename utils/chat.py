@@ -5,7 +5,9 @@ from nltk.corpus import wordnet as wn
 from streamlit import session_state
 
 from utils.Statistics import Statistics
-from utils.constants import INTRO_MSG, ASSISTANT, USER, GPT_VERSION, BACKUP_GOAL_WORDS, DEBUG
+from utils.constants import INTRO_MSG, ASSISTANT, USER, GPT_VERSION, BACKUP_GOAL_WORDS, DEBUG, VALID_RESPONSES, \
+    CORRECT_RESPONSE_PROMPT, GIVE_HINT_PROMPT, GIVE_UP_PROMPT, DEFINE_GOAL_PROMPT, DEFINE_GOAL_USED_PROMPT, \
+    DEFINE_GOAL_FAILSAFE_PROMPT
 
 
 # functions that are triggered by user actions
@@ -42,11 +44,11 @@ def handle_user_input():
         response = st.session_state.client.chat.completions.create(model=GPT_VERSION, messages=prompt_msgs)
         msg = response.choices[0].message.content
         counter = 0  # counter for max amount of iterations
-        #while not yes_no_function(msg) and counter <= 5:
-        #    msg = correct_response()
-        #    counter += 1
-        #if not yes_no_function(msg):
-        #    msg = "I am not sure, please ask me another question."
+        while not yes_no_function(msg) and counter <= 5:
+            msg = correct_response()
+            counter += 1
+        if not yes_no_function(msg):
+            msg = "I am not sure, please ask me another question."
         append_msg(ASSISTANT, msg)
         write_message(ASSISTANT, msg)
 
@@ -59,16 +61,9 @@ def give_hint():
     response = ""
     # ensure ChatGPT gives a proper response and does not spoil the goal word
     while st.session_state.goal in response or response == "" or not response.startswith("Hint:"):
-        # create a string of all messages for context
-        # messages_as_str = "\n".join([message["content"] for message in st.session_state.messages])
-        response = send_prompt(
-            f"The user needs a hint to guess the word. Provide one based on the guessing word: {st.session_state.goal}"
-            "but it is very important that the goal is not mentioned in the hint. Refer to the questions and guesses "
-            f"the user has done so far. Your first hint should be general and then the hints should get more and more"
-            f"specific. In the chat you will find several messages starting with 'Hint:'. It is of "
-            f"uttermost importance that your hint has a different meaning than those hints. Your hint should provide "
-            f"new information to the user they have not received yet through the chat. Your answer should start with "
-            f"'Hint:', followed by the hint")
+        if st.session_state.debug:
+            print(GIVE_HINT_PROMPT.format(goal_word=st.session_state.goal))
+        response = send_prompt(GIVE_HINT_PROMPT.format(goal_word=st.session_state.goal))
     append_msg(ASSISTANT, response)
 
 
@@ -77,8 +72,7 @@ def give_up():
     called when user gives up. starts a new game
     """
     session_state.messages.clear()
-    response = send_prompt("The user gave up on our guessing game. Write a creative message to cheer them up and "
-                           "tell them that the word was ." + st.session_state.goal)
+    response = send_prompt(GIVE_UP_PROMPT.format(goal_word=st.session_state.goal))
     append_msg(ASSISTANT, response)
     start(intro_msg=INTRO_MSG, write=False)
 
@@ -202,11 +196,11 @@ def define_goal(depth=0):
     defines a goal for the streamlit session by prompting ChatGPT
     :parameter depth: recursion depth as a failsafe
     """
-    prompt = ("Give one random noun for my guessing game. Your answer should only consist of that one word. "
-              "I really need a one word answer, any answer with more than one word will destroy my code.")
     already_used = [goal for goal in st.session_state.goals]
     if already_used:
-        prompt += "Do not use any of the following words: " + ", ".join(already_used)
+        prompt = DEFINE_GOAL_USED_PROMPT.format(already_used=", ".join(already_used))
+    else:
+        prompt = DEFINE_GOAL_PROMPT
     new_goal = send_prompt(prompt)
 
     # check whether ChatGPTs goal word really only consists of one word, if yes append it, else redefine the goal word
@@ -221,8 +215,7 @@ def define_goal(depth=0):
         new_goal = random.choice(BACKUP_GOAL_WORDS)
         st.session_state.goals.append(new_goal)
         st.session_state.goal = new_goal
-        send_prompt("I decided on a goal word by myself. In the following I will ask questions trying to guess "
-                    "the word.")
+        send_prompt(DEFINE_GOAL_FAILSAFE_PROMPT)
     else:
         # trying again
         depth += 1
@@ -296,13 +289,12 @@ def yes_no_function(response: str, predefined: str = "I am not sure, please ask 
     :return: whether the given response is yes, no or a predefined message
     """
     response = response.lower()
-    return response == "yes" or response == "no" or response == predefined
+    return response in VALID_RESPONSES or response == predefined
 
 
 def correct_response() -> str:
     """
     tries to correct ChatGPT's response by telling it to only answer with Yes or No
     """
-    response = send_prompt(
-        "If it is true for the Goal answer if 'Yes.' if it is false for the goal answer with 'No.' If you are not sure how to answer say 'i am not sure, please ask me another question.' ")
+    response = send_prompt(CORRECT_RESPONSE_PROMPT)
     return response
