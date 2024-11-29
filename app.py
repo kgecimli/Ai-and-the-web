@@ -10,8 +10,8 @@ nltk.download("wordnet")
 init_app()
 
 # pages
-game_page = st.Page("game.py", title="Guessing game", icon=":material/sports_esports:")
-stats_page = st.Page("stats.py", title="Statistics", icon=":material/bar_chart:")
+game_page = st.Page("game.py", title="Play", icon=":material/sports_esports:")
+stats_page = st.Page("stats.py", title="Stats", icon=":material/bar_chart:")
 credits_page = st.Page("credits.py", title="Credits", icon=":material/groups:")
 
 pg = st.navigation([game_page, stats_page, credits_page])
