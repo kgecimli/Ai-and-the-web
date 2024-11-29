@@ -24,7 +24,7 @@ if len(st.session_state.statistics) > 1:
     average_guesses /= len(st.session_state.statistics) - 1
     st.write(f"Average number of guesses per game: {average_guesses}")
 
-for i, element in enumerate(reversed(st.session_state.statistics), 1):
+for i, element in enumerate(st.session_state.statistics, 1):
     # for each game, output number of questions and of guesses
     st.markdown("### Game " + str(i) + ": ")
     st.markdown(str(element))

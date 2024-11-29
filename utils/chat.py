@@ -236,6 +236,7 @@ def evaluate_guess(guess: str):
     """
     if st.session_state.goal.lower() == guess.lower():
         st.balloons()
+        write_message(ASSISTANT, f"Congratulations! The word was '{st.session_state.goal}'.")
         st.session_state.messages.clear()
         start(intro_msg=INTRO_MSG)
     else:
