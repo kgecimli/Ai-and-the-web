@@ -7,7 +7,7 @@ from streamlit import session_state
 from utils.Statistics import Statistics
 from utils.constants import INTRO_MSG, ASSISTANT, USER, GPT_VERSION, BACKUP_GOAL_WORDS, DEBUG, VALID_RESPONSES, \
     CORRECT_RESPONSE_PROMPT, GIVE_HINT_PROMPT, GIVE_UP_PROMPT, DEFINE_GOAL_PROMPT, DEFINE_GOAL_USED_PROMPT, \
-    DEFINE_GOAL_FAILSAFE_PROMPT
+    DEFINE_GOAL_FAILSAFE_PROMPT, IDK
 
 
 # functions that are triggered by user actions
@@ -281,7 +281,7 @@ def calculate_similarity(message: str) -> str:
         return "It seems like you have no clue, maybe asking more questions might help."
 
 
-def yes_no_function(response: str, predefined: str = "I am not sure, please ask me another question.") -> bool:
+def yes_no_function(response: str, predefined: str = IDK) -> bool:
     """
     Checks whether the given response is yes, no or a predefined message
     :param response: response to check
@@ -289,7 +289,7 @@ def yes_no_function(response: str, predefined: str = "I am not sure, please ask 
     :return: whether the given response is yes, no or a predefined message
     """
     response = response.lower()
-    return response in VALID_RESPONSES or response == predefined
+    return response in VALID_RESPONSES or response == predefined.lower()
 
 
 def correct_response() -> str:

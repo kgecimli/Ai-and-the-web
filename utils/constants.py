@@ -6,9 +6,12 @@ BACKUP_GOAL_WORDS = ["car", "fish", "orange", "christmas", "water", "candle", "g
 DEBUG = True
 VALID_RESPONSES = ["yes.", "no.", "yes", "no", "I am not sure, please ask me another question."]
 
+# responses
+IDK = "I am not sure, please ask me another question."
+
 # prompts
 CORRECT_RESPONSE_PROMPT = ("If it is true for the Goal answer with 'Yes.' if it is false for the goal answer with 'No.'"
-                           " If you are not sure how to answer say 'i am not sure, please ask me another question.'")
+                           f" If you are not sure how to answer say '{IDK}'")
 GIVE_HINT_PROMPT = (
     "The user needs a hint to guess the word. Provide one based on the goal word: {goal_word}. "
     "It is very important that the goal is not mentioned in the hint. Refer to the questions and guesses "
