@@ -1,23 +1,13 @@
 import nltk
 import streamlit as st
-from openai import OpenAI
 
-from utils.chat import init_session_variables
+from utils.chat import init_app
 
 # download wordnet from nltk for word similarity measuring
 nltk.download("wordnet")
 
 # setup
-if "loaded" not in st.session_state or not st.session_state.loaded:  # st.session_state ist ein dictionary
-    # loading the OpenAI key and creating a client
-    openai_api_key = st.secrets.get("OPENAI_KEY")
-    client = OpenAI(api_key=openai_api_key)
-
-    # initialising all session variables once so we don't have to check if they exist every time
-    init_session_variables()
-
-    # making the client available everywhere in the app
-    st.session_state.client = client
+init_app()
 
 # pages
 game_page = st.Page("game.py", title="Guessing game", icon=":material/sports_esports:")

@@ -1,5 +1,10 @@
 import streamlit as st
 
+from utils.chat import init_app
+
+# setup
+init_app()
+
 content = """These are the enormously talented programmers who dedicated huge parts of their lives and willpower to 
 create this masterpiece. The names of these icons of peak programmer performance are (in order of attractiveness): 
 **Noah Schade** (_Head of International Business Relations and Partnerships_), **Adrian Brechtken** (_intern_), 
@@ -20,6 +25,7 @@ urls = """
 """
 st.markdown(cnt)
 with st.expander("..."):
-    st.write("Like actually guys we really really do we spend the last few years developing this and its not even good please")
+    st.write(
+        "Like actually guys we really really do we spend the last few years developing this and its not even good "
+        "please")
 st.markdown(urls)
-
